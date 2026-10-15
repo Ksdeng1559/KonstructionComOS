@@ -90,3 +90,5 @@ The app hostname is a placeholder and must not be published before domain owners
 ## Decision log
 
 **2026-10-14:** User designated `https://clearconnectcom.lovable.app` as frontend for KonstructionComOS. Recommended initial implementation is a **connected public frontend + separate authenticated SaaS**, pending branding/domain confirmation and actual auth integration.
+
+**2026-10-15:** Broker-console design prototype added ([`docs/design/BROKER_CONSOLE.md`](design/BROKER_CONSOLE.md)). It applies the Lovable color/type tokens (FE-03) to the authenticated app's first screens, adds a unified inbox planned on Unipile, and supersedes the visual design of PR #1 while keeping its engineering. Static prototype only — no integration built.

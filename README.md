@@ -64,3 +64,7 @@ See `docs/PRD.md` and `docs/ARCHITECTURE.md`. This is an MVP scaffold, **not** a
 6. Validate organization isolation, Clerk/Supabase integration, demo vs verified data boundaries, lawful contact handling, analytics and cross-domain navigation before marking integrated.
 
 **Implementation reference:** [docs/FRONTEND_INTEGRATION.md](docs/FRONTEND_INTEGRATION.md). Coding agents should read it alongside [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md).
+
+## Broker console design (prototype)
+
+The approved dashboard design for the authenticated app is a static, clickable prototype: open [docs/design/prototypes/broker-console.html](docs/design/prototypes/broker-console.html) in a browser. Spec, business-rule assumptions, the planned Unipile unified-inbox integration and how it relates to PR #1 are in [docs/design/BROKER_CONSOLE.md](docs/design/BROKER_CONSOLE.md). All records in it are synthetic.

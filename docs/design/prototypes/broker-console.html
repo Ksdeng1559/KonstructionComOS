@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- KonstructionComOS broker console: static design prototype. Synthetic data only; no network calls.
+     Spec: docs/design/BROKER_CONSOLE.md -->
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>KonstructionComOS Broker Console</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: fixed navy sidebar (Lovable "sidebar" tokens) + scrolling work area; sidebar collapses to a top nav strip on phones.
+   Palette mirrors the Lovable ClearCommercialConnect tokens: navy primary, blue accent (light) / gold accent (dark). */
+:root{
+  --bg:hsl(214 32% 97%);--surface:#fff;--surface-2:hsl(214 32% 95%);
+  --fg:hsl(216 55% 15%);--muted:hsl(215 16% 44%);--border:hsl(214 32% 89%);
+  --primary:hsl(216 55% 23%);--accent:hsl(217 91% 53%);--accent-fg:#fff;--accent-soft:hsl(217 91% 53% / .1);
+  --success:hsl(160 84% 27%);--success-soft:hsl(160 84% 39% / .12);
+  --warning:hsl(32 92% 36%);--warning-soft:hsl(38 92% 50% / .15);
+  --danger:hsl(0 72% 45%);--danger-soft:hsl(0 84% 60% / .1);
+  --side-bg:hsl(216 55% 15%);--side-fg:hsl(0 0% 98%);--side-muted:hsl(215 25% 70%);--side-active:hsl(216 55% 21%);--side-mark:hsl(43 68% 52%);
+  --shadow:0 4px 6px -1px hsl(216 55% 15% / .08),0 2px 4px -2px hsl(216 55% 15% / .08);
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --radius:8px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:hsl(216 55% 8%);--surface:hsl(216 55% 12%);--surface-2:hsl(216 55% 16%);
+  --fg:hsl(0 0% 98%);--muted:hsl(215 20% 68%);--border:hsl(216 55% 20%);
+  --primary:hsl(43 68% 52%);--accent:hsl(43 68% 52%);--accent-fg:hsl(216 55% 13%);--accent-soft:hsl(43 68% 52% / .14);
+  --success:hsl(160 70% 50%);--success-soft:hsl(160 84% 39% / .18);
+  --warning:hsl(38 92% 60%);--warning-soft:hsl(38 92% 50% / .18);
+  --danger:hsl(0 80% 68%);--danger-soft:hsl(0 84% 60% / .16);
+  --side-bg:hsl(216 55% 6%);--side-active:hsl(216 55% 13%);
+  --shadow:0 4px 14px -6px hsl(0 0% 0% / .5);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:hsl(216 55% 8%);--surface:hsl(216 55% 12%);--surface-2:hsl(216 55% 16%);
+  --fg:hsl(0 0% 98%);--muted:hsl(215 20% 68%);--border:hsl(216 55% 20%);
+  --primary:hsl(43 68% 52%);--accent:hsl(43 68% 52%);--accent-fg:hsl(216 55% 13%);--accent-soft:hsl(43 68% 52% / .14);
+  --success:hsl(160 70% 50%);--success-soft:hsl(160 84% 39% / .18);
+  --warning:hsl(38 92% 60%);--warning-soft:hsl(38 92% 50% / .18);
+  --danger:hsl(0 80% 68%);--danger-soft:hsl(0 84% 60% / .16);
+  --side-bg:hsl(216 55% 6%);--side-active:hsl(216 55% 13%);
+  --shadow:0 4px 14px -6px hsl(0 0% 0% / .5);color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ---------- Shell ---------- */
+.side{position:fixed;inset:0 auto 0 0;width:240px;background:var(--side-bg);color:var(--side-fg);display:flex;flex-direction:column;
+  padding:calc(20px + env(safe-area-inset-top,0px)) 14px calc(16px + env(safe-area-inset-bottom,0px)) calc(14px + env(safe-area-inset-left,0px));z-index:20}
+.logo{display:flex;gap:10px;align-items:center;padding:0 8px}
+.logo-mark{width:32px;height:32px;border-radius:6px;background:var(--side-mark);color:hsl(216 55% 15%);display:grid;place-items:center;font-weight:700;font-size:13px}
+.logo b{display:block;font-size:15px;letter-spacing:-.01em}
+.logo small{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--side-muted)}
+.org{margin:22px 4px 18px;padding:10px 12px;border:1px solid hsl(216 55% 25%);border-radius:var(--radius);font-size:12px}
+.org span{display:block;color:var(--side-muted);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:6px;color:var(--side-muted);font-size:13.5px;font-weight:500}
+.nav button:hover{color:var(--side-fg);background:hsl(216 55% 100% / .04)}
+.nav button[aria-current="page"]{background:var(--side-active);color:var(--side-fg);box-shadow:inset 3px 0 0 var(--side-mark)}
+.nav button:focus-visible{outline:2px solid var(--side-mark)}
+.nav svg{width:17px;height:17px;flex:none}
+.nav .count{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--side-muted)}
+.side-foot{margin-top:auto;font-size:11px;color:var(--side-muted);display:grid;gap:8px;padding:0 8px}
+.side-foot button{all:unset;cursor:pointer;color:var(--side-fg);text-decoration:underline;text-underline-offset:3px;width:max-content}
+
+.main{margin-left:240px;min-width:0;padding-block:24px 64px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1280px;margin:0 auto;display:grid;gap:20px}
+.banner{display:flex;gap:10px;align-items:flex-start;background:var(--warning-soft);color:var(--fg);border:1px solid color-mix(in srgb,var(--warning) 35%,transparent);border-radius:var(--radius);padding:10px 14px;font-size:12.5px}
+.banner b{color:var(--warning)}
+.head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;justify-content:space-between}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.head h1{font-size:26px;margin-top:4px}
+.head p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+
+/* ---------- Building blocks ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:16px 18px 0}
+.card-h h2{font-size:15px}
+.card-h .sub{color:var(--muted);font-size:12px}
+.card-b{padding:14px 18px 18px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.kpi{padding:16px 18px}
+.kpi .label{color:var(--muted);font-size:12px;font-weight:500}
+.kpi .val{font-family:var(--mono);font-size:26px;font-weight:600;margin-top:6px;letter-spacing:-.02em}
+.kpi .note{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi .note.up{color:var(--success)}
+.grid-2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;align-items:start}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:600;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.pill.good{background:var(--success-soft);color:var(--success)}
+.pill.info{background:var(--accent-soft);color:var(--accent)}
+.pill.warn{background:var(--warning-soft);color:var(--warning)}
+.pill.bad{background:var(--danger-soft);color:var(--danger)}
+.score{font-family:var(--mono)}
+.btn{cursor:pointer;border:1px solid var(--border);background:var(--surface);border-radius:6px;padding:6px 12px;font-size:12.5px;font-weight:600}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.primary:hover{filter:brightness(1.07);color:var(--accent-fg)}
+.btn:disabled{opacity:.45;cursor:not-allowed;border-color:var(--border);color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+/* Tables */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:500;color:var(--muted);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;padding:10px 14px;background:var(--surface-2);white-space:nowrap}
+td{padding:12px 14px;border-top:1px solid var(--border);vertical-align:top}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--accent-soft)}
+td .t{font-weight:600}
+td .s{color:var(--muted);font-size:12px}
+td.r,th.r{text-align:right}
+
+/* Filters */
+.filters{display:flex;flex-wrap:wrap;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border)}
+.filters input,.filters select{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;min-width:0}
+.filters input{flex:1 1 220px}
+
+/* Lists */
+.list{display:grid}
+.li{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--border)}
+.li:first-child{border-top:0;padding-top:0}
+.li .body{flex:1;min-width:0}
+.li .t{font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;margin-top:7px;flex:none;background:var(--accent)}
+.dot.warn{background:var(--warning)}.dot.bad{background:var(--danger)}.dot.good{background:var(--success)}
+
+/* Stage bars */
+.bars{display:grid;gap:10px}
+.bar-row{display:grid;grid-template-columns:110px minmax(0,1fr) 70px;gap:10px;align-items:center;font-size:12.5px}
+.bar-track{height:10px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.bar-fill{height:100%;background:var(--accent);border-radius:999px}
+.bar-fill.funded{background:var(--success)}
+
+/* Kanban */
+.board-wrap{overflow-x:auto;padding-bottom:6px}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:250px;gap:12px}
+.col{background:var(--surface-2);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:8px;min-height:340px}
+.col.over{outline:2px dashed var(--accent);outline-offset:-2px}
+.col-h{display:flex;justify-content:space-between;align-items:baseline;padding:2px 4px 4px}
+.col-h b{font-size:13px}
+.col-h span{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.dcard{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;cursor:grab;display:grid;gap:6px;box-shadow:var(--shadow)}
+.dcard.dragging{opacity:.5}
+.dcard .t{font-weight:600;font-size:13px;line-height:1.35}
+.dcard .meta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}
+.dcard .amt{font-family:var(--mono);font-weight:600;color:var(--fg)}
+.dcard .next{font-size:12px;border-top:1px solid var(--border);padding-top:6px}
+.dcard .next.due{color:var(--warning);font-weight:600}
+.dcard select{font-size:11.5px;border:1px solid var(--border);border-radius:5px;background:var(--surface);padding:3px 6px}
+.owner{width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:10px;font-weight:700;display:grid;place-items:center;flex:none}
+
+/* Tile map */
+.map-wrap{overflow-x:auto}
+.tiles{display:grid;grid-template-columns:repeat(7,minmax(74px,1fr));gap:6px;min-width:560px}
+.tile{all:unset;box-sizing:border-box;cursor:pointer;aspect-ratio:1.15;border-radius:6px;padding:8px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--border);max-width:100%}
+.tile:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.tile.sel{outline:2px solid var(--fg);outline-offset:1px}
+.tile .n{font-size:11.5px;font-weight:600;line-height:1.2}
+.tile .v{font-family:var(--mono);font-size:12px;font-weight:600}
+.tile.empty{background:transparent;border-style:dashed;color:var(--muted);cursor:default}
+.legend{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.legend .ramp{width:160px;height:8px;border-radius:999px;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--accent))}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;padding:5px 11px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* Drawer */
+.scrim{position:fixed;inset:0;background:hsl(216 55% 10% / .45);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--surface);border-left:1px solid var(--border);z-index:41;overflow-y:auto;
+  padding:calc(20px + env(safe-area-inset-top,0px)) calc(22px + env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) 22px;display:grid;gap:18px;align-content:start}
+.drawer h2{font-size:20px}
+.drawer h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px}
+.close{all:unset;cursor:pointer;justify-self:end;font-size:13px;color:var(--muted);font-weight:600}
+.close:focus-visible{outline:2px solid var(--accent)}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fact{background:var(--surface-2);border-radius:6px;padding:10px 12px}
+.fact span{display:block;font-size:11px;color:var(--muted)}
+.fact b{font-family:var(--mono);font-size:15px}
+.drawer ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.hint{font-size:12px;color:var(--muted);border-left:2px solid var(--border);padding-left:10px}
+
+/* Unified inbox: channels/accounts | thread list | conversation */
+.inbox{display:grid;grid-template-columns:190px minmax(0,330px) minmax(0,1fr);overflow:hidden}
+.ib-side{border-right:1px solid var(--border);padding:14px;display:grid;gap:16px;align-content:start}
+.ib-side h3{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px}
+.chans{display:grid;gap:2px}
+.chan{all:unset;cursor:pointer;display:flex;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:6px;font-weight:500;font-size:13px}
+.chan:hover{background:var(--surface-2)}
+.chan[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.chan:focus-visible{outline:2px solid var(--accent)}
+.chan span{font-family:var(--mono);font-size:11.5px}
+.accts{display:grid;gap:8px}
+.acct{display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.35}
+.acct .dot{margin-top:4px}
+.ib-list{border-right:1px solid var(--border);overflow-y:auto;max-height:680px}
+.th{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);width:100%}
+.th:hover{background:var(--surface-2)}
+.th[aria-current="true"]{background:var(--accent-soft)}
+.th:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.th .row{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.th .who{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.th.unread .who{font-weight:700}
+.th time{font-family:var(--mono);font-size:11px;color:var(--muted);flex:none}
+.th .snip{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.th .tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.th .pill{font-size:10.5px;padding:1px 7px}
+.av{width:32px;height:32px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font-weight:700;font-size:11px;position:relative}
+.th.unread .av::after{content:"";position:absolute;top:-1px;right:-1px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--surface)}
+.ib-thread{display:flex;flex-direction:column;min-width:0}
+.thr-h{padding:14px 18px;border-bottom:1px solid var(--border);display:grid;gap:8px}
+.thr-h h2{font-size:16px}
+.ctx{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}
+.msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px;max-height:420px;min-height:220px}
+.msg{max-width:80%;padding:9px 12px;border-radius:10px;background:var(--surface-2);font-size:13.5px;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-fg)}
+.msg time{display:block;font-size:11px;opacity:.75;margin-top:4px;font-family:var(--mono)}
+.composer{border-top:1px solid var(--border);padding:12px 18px 16px;display:grid;gap:8px}
+.composer textarea{width:100%;min-height:72px;resize:vertical;border:1px solid var(--border);border-radius:6px;padding:8px 10px;background:var(--surface)}
+.composer .row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.back{display:none}
+@media (max-width:1100px){.inbox{grid-template-columns:minmax(0,300px) minmax(0,1fr)}
+  .ib-side{grid-column:1/-1;border-right:0;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:12px 28px}
+  .chans{display:flex;flex-wrap:wrap}}
+@media (max-width:700px){.inbox{grid-template-columns:minmax(0,1fr)}.ib-list{border-right:0;max-height:none}
+  .inbox.open .ib-list{display:none}.inbox:not(.open) .ib-thread{display:none}.back{display:inline-block;justify-self:start}}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:60;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){
+  .side{position:sticky;top:0;inset:auto;width:auto;flex-direction:row;align-items:center;gap:12px;
+    padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));overflow-x:auto}
+  .org,.side-foot,.logo small,.nav .count{display:none}
+  .nav{flex-direction:row}
+  .nav button{padding:7px 10px;white-space:nowrap}
+  .nav button[aria-current="page"]{box-shadow:inset 0 -2px 0 var(--side-mark)}
+  .main{margin-left:0;padding-block:18px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
+@media (max-width:520px){.kpis{grid-template-columns:minmax(0,1fr)}.facts{grid-template-columns:minmax(0,1fr)}.bar-row{grid-template-columns:90px minmax(0,1fr) 60px}}
+@media (prefers-reduced-motion:no-preference){.drawer{animation:slide .2s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
+</style>
+</head>
+<body>
+
+<aside class="side">
+  <div class="logo"><div class="logo-mark">K</div><div><b>KonstructionComOS</b><small>Construction Intelligence</small></div></div>
+  <div class="org"><span>Workspace</span>Deng Commercial Finance · Demo</div>
+  <nav class="nav" id="nav" aria-label="Main"></nav>
+  <div class="side-foot">
+    <div>BC pilot · Prototype v0.1</div>
+    <button type="button" data-action="reset">Reset demo data</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="wrap">
+    <div class="banner" role="note"><b>Illustrative demo.</b><span>All projects, companies, people and deals are invented for design purposes. They aren't verified BC permit records and are never sent to a CRM.</span></div>
+    <div id="view"></div>
+  </div>
+</main>
+<div id="layer"></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+/* =====================================================================
+   KonstructionComOS — clickable broker-console prototype.
+   Everything below is synthetic demo data + view renderers. No network.
+   State (deal stages, logged outreach) is kept per-viewer in localStorage
+   so a demo can be clicked through and then reset.
+   ===================================================================== */
+const TODAY = new Date('2026-10-15T12:00:00');
+const STORE_KEY = 'kcos-demo-v2';
+
+/* ---------- Reference data ---------- */
+// Financing stages for a commercial broker; weights are planning estimates only.
+const STAGES = [
+  {id:'identified', name:'Identified', w:.05},
+  {id:'contacted',  name:'Contacted',  w:.10},
+  {id:'discovery',  name:'Discovery',  w:.20},
+  {id:'packaging',  name:'Packaging',  w:.35},
+  {id:'lender',     name:'Lender review', w:.50},
+  {id:'termsheet',  name:'Term sheet', w:.75},
+  {id:'funded',     name:'Funded',     w:1}
+];
+const stageById = Object.fromEntries(STAGES.map(s => [s.id, s]));
+
+// Schematic tile positions (col,row) — roughly geographic, not to scale.
+const MUNIS = [
+  {n:'Fort St. John',c:6,r:0,reg:'North'},{n:'Prince George',c:5,r:0,reg:'North'},
+  {n:'Squamish',c:2,r:1,reg:'Sea-to-Sky'},{n:'Kamloops',c:5,r:1,reg:'Interior'},
+  {n:'Nanaimo',c:0,r:2,reg:'Vancouver Island'},{n:'North Vancouver',c:2,r:2,reg:'Metro Vancouver'},
+  {n:'Port Moody',c:3,r:2,reg:'Metro Vancouver'},{n:'Kelowna',c:6,r:2,reg:'Interior'},
+  {n:'Vancouver',c:2,r:3,reg:'Metro Vancouver'},{n:'Burnaby',c:3,r:3,reg:'Metro Vancouver'},
+  {n:'Coquitlam',c:4,r:3,reg:'Metro Vancouver'},
+  {n:'Langford',c:0,r:4,reg:'Vancouver Island'},{n:'Victoria',c:1,r:4,reg:'Vancouver Island'},
+  {n:'Richmond',c:2,r:4,reg:'Metro Vancouver'},{n:'Surrey',c:3,r:4,reg:'Metro Vancouver'},
+  {n:'Langley Twp',c:4,r:4,reg:'Metro Vancouver'},{n:'Abbotsford',c:5,r:4,reg:'Fraser Valley'},
+  {n:'Chilliwack',c:6,r:4,reg:'Fraser Valley'}
+];
+
+// Synthetic BC projects. value = estimated construction cost (CAD).
+const PROJECTS = [
+  {id:'BC-101',name:'Lonsdale Quay Mixed-Use',muni:'North Vancouver',type:'Mixed-use',stage:'Rezoning',size:'186 units',value:84e6,score:92,dev:'S1',
+   signals:[['2026-10-09','Public hearing scheduled','City of North Vancouver council agenda'],['2026-09-22','Rezoning application amended','Municipal development tracker']]},
+  {id:'BC-102',name:'Fleetwood Townhomes Ph. 2',muni:'Surrey',type:'Townhouse',stage:'Development permit',size:'64 units',value:38e6,score:86,dev:'S3',
+   signals:[['2026-10-02','DP issued','City of Surrey DP register']]},
+  {id:'BC-103',name:'Marine Way Industrial',muni:'Burnaby',type:'Industrial',stage:'Building permit issued',size:'210,000 sf',value:46e6,score:81,dev:'S4',
+   signals:[['2026-08-14','Building permit issued','City of Burnaby permit report']]},
+  {id:'BC-104',name:'Kingsway Rental Tower',muni:'Vancouver',type:'Purpose-built rental',stage:'Rezoning',size:'312 units',value:148e6,score:88,dev:'S2',
+   signals:[['2026-10-12','Rezoning referral report','City of Vancouver council report'],['2026-10-01','Land title transfer','LTSA title search']]},
+  {id:'BC-105',name:'Willoughby Six-Storey',muni:'Langley Twp',type:'Multifamily',stage:'Development permit',size:'118 units',value:52e6,score:77,dev:'S10',
+   signals:[['2026-10-08','DP application received','Township of Langley agenda']]},
+  {id:'BC-106',name:'Lougheed Infill',muni:'Coquitlam',type:'Multifamily',stage:'Pre-application',size:'90 units',value:41e6,score:64,dev:null,
+   signals:[['2026-09-18','Pre-application meeting noted','City of Coquitlam planning notes']]},
+  {id:'BC-107',name:'Pandosy Village Mid-rise',muni:'Kelowna',type:'Mixed-use',stage:'BP application',size:'140 units',value:61e6,score:83,dev:'S5',
+   signals:[['2026-10-06','Building permit application','City of Kelowna permit report']]},
+  {id:'BC-108',name:'Langford Station Rentals',muni:'Langford',type:'Purpose-built rental',stage:'Development permit',size:'96 units',value:39e6,score:79,dev:'S6',
+   signals:[['2026-09-29','DP approved','City of Langford council minutes']]},
+  {id:'BC-109',name:'Steveston Seniors Residence',muni:'Richmond',type:'Seniors housing',stage:'Rezoning',size:'120 suites',value:57e6,score:71,dev:'S9',
+   signals:[['2026-10-13','First reading','City of Richmond council agenda']]},
+  {id:'BC-110',name:'Abbotsford Logistics Hub',muni:'Abbotsford',type:'Industrial',stage:'Building permit issued',size:'340,000 sf',value:58e6,score:74,dev:'S8',
+   signals:[['2026-09-10','Building permit issued','City of Abbotsford permit report']]},
+  {id:'BC-111',name:'Nanaimo Harbourside Hotel',muni:'Nanaimo',type:'Hospitality',stage:'OCP amendment',size:'150 keys',value:72e6,score:58,dev:null,
+   signals:[['2026-08-30','OCP amendment application','City of Nanaimo agenda']]},
+  {id:'BC-112',name:'North Shore Townhomes',muni:'Kamloops',type:'Townhouse',stage:'Development permit',size:'48 units',value:22e6,score:69,dev:'S10',
+   signals:[['2026-10-11','DP application received','City of Kamloops agenda']]},
+  {id:'BC-113',name:'Port Moody Station Flats',muni:'Port Moody',type:'Multifamily',stage:'Rezoning',size:'220 units',value:96e6,score:85,dev:'S1',
+   signals:[['2026-10-14','Public hearing scheduled','City of Port Moody council agenda'],['2026-09-26','Land assembly complete','LTSA title search']]},
+  {id:'BC-114',name:'Squamish Light Industrial',muni:'Squamish',type:'Industrial strata',stage:'BP application',size:'24 strata units',value:18e6,score:66,dev:null,
+   signals:[['2026-10-03','Building permit application','District of Squamish permit report']]}
+];
+const projById = Object.fromEntries(PROJECTS.map(p => [p.id, p]));
+
+// Stakeholders with CASL consent basis. pub = conspicuously published business address.
+const PEOPLE = [
+  {id:'S1',co:'Harbourline Developments',role:'Developer',contact:'R. Thiessen · VP Development',proj:['BC-101','BC-113'],consent:'express',since:'2026-05-02'},
+  {id:'S2',co:'Kingsgate Rental Partners',role:'Developer',contact:'M. Osei · Managing Partner',proj:['BC-104'],consent:'pub'},
+  {id:'S3',co:'Fleetwood Homes Ltd.',role:'Developer',contact:'J. Sandhu · President',proj:['BC-102'],consent:'express',since:'2026-03-18'},
+  {id:'S4',co:'Marine Way Holdings',role:'Owner',contact:'L. Chen · CFO',proj:['BC-103'],consent:'ebr',expires:'2027-08-30'},
+  {id:'S5',co:'Okanagan Pacific Builders',role:'General contractor',contact:'D. Kowalski · Estimating',proj:['BC-107'],consent:'ebr',expires:'2027-01-10'},
+  {id:'S6',co:'Westcoast Rental Group',role:'Developer',contact:'A. Fraser · Development Manager',proj:['BC-108'],consent:'express',since:'2026-07-21'},
+  {id:'S7',co:'Studio Meridian Architecture',role:'Architect',contact:'P. Nakamura · Principal',proj:['BC-101','BC-104','BC-109'],consent:'pub'},
+  {id:'S8',co:'Fraser Logistics Trust',role:'Owner',contact:'Contact not yet identified',proj:['BC-110'],consent:'none'},
+  {id:'S9',co:'Steveston Care Society',role:'Owner',contact:'Board chair',proj:['BC-109'],consent:'none'},
+  {id:'S10',co:'Ridgeline Construction',role:'Developer / GC',contact:'K. Brar · Owner',proj:['BC-105','BC-112'],consent:'ebr',expires:'2026-11-04'}
+];
+const personById = Object.fromEntries(PEOPLE.map(p => [p.id, p]));
+
+// Default opportunities (deals) and outreach log; cloned into state so "reset" works.
+const DEFAULT_DEALS = [
+  {id:'D1',proj:'BC-101',product:'Construction loan',amt:58e6,lender:'Schedule I bank',stage:'lender',next:'Lender credit committee',due:'2026-10-16',owner:'DE'},
+  {id:'D2',proj:'BC-104',product:'Land + rezoning bridge',amt:32e6,lender:'Debt fund (TBD)',stage:'discovery',next:'Discovery call with CFO',due:'2026-10-17',owner:'DE'},
+  {id:'D3',proj:'BC-102',product:'Construction loan',amt:27e6,lender:'Credit union syndicate',stage:'termsheet',next:'Review term sheet conditions',due:'2026-10-15',owner:'MK'},
+  {id:'D4',proj:'BC-113',product:'Land loan',amt:18e6,lender:'—',stage:'contacted',next:'Send intro package',due:'2026-10-20',owner:'DE'},
+  {id:'D5',proj:'BC-107',product:'Construction loan',amt:43e6,lender:'Credit union',stage:'packaging',next:'Collect cost-to-complete + pro forma',due:'2026-10-18',owner:'MK'},
+  {id:'D6',proj:'BC-103',product:'Construction loan',amt:31e6,lender:'Schedule I bank',stage:'funded',next:'Draw schedule check-in',due:'2026-11-02',owner:'DE'},
+  {id:'D7',proj:'BC-108',product:'CMHC MLI Select take-out',amt:35e6,lender:'Approved CMHC lender',stage:'packaging',next:'Order appraisal',due:'2026-10-22',owner:'MK'},
+  {id:'D8',proj:'BC-105',product:'Construction loan',amt:36e6,lender:'—',stage:'identified',next:'Confirm developer contact',due:'2026-10-21',owner:'DE'},
+  {id:'D9',proj:'BC-110',product:'Construction loan',amt:38e6,lender:'Life company',stage:'discovery',next:'Request pre-lease agreements',due:'2026-10-19',owner:'MK'},
+  {id:'D10',proj:'BC-109',product:'Land bridge',amt:14e6,lender:'—',stage:'identified',next:'Confirm title & assessment',due:'2026-10-24',owner:'DE'}
+];
+const DEFAULT_OUTREACH = [
+  {d:'2026-10-14',who:'S1',ch:'Email',proj:'BC-101',note:'Shared lender shortlist'},
+  {d:'2026-10-14',who:'S3',ch:'Call',proj:'BC-102',note:'Term sheet walkthrough booked'},
+  {d:'2026-10-13',who:'S6',ch:'Meeting',proj:'BC-108',note:'MLI Select eligibility review'},
+  {d:'2026-10-10',who:'S2',ch:'Email',proj:'BC-104',note:'Intro: rezoning bridge options'},
+  {d:'2026-10-09',who:'S7',ch:'LinkedIn',proj:'BC-104',note:'Connected re: Kingsway tower'},
+  {d:'2026-10-08',who:'S9',ch:'Call',proj:'BC-109',note:'Left voicemail'},
+  {d:'2026-10-07',who:'S5',ch:'Email',proj:'BC-107',note:'Requested cost-to-complete'},
+  {d:'2026-10-03',who:'S4',ch:'Meeting',proj:'BC-103',note:'Funding confirmed'}
+];
+
+/* ---------- Unified inbox (shape mirrors a Unipile-style feed) ----------
+   In production these come from the messaging API: connected accounts
+   (with status from account webhooks), chats, and messages. Each thread is
+   matched to a stakeholder, and through them to a project and deal. */
+const CHANNELS = {email:'Email', linkedin:'LinkedIn', whatsapp:'WhatsApp'};
+const ACCOUNTS = [
+  {ch:'email', label:'Gmail · deals inbox', ok:true},
+  {ch:'email', label:'Outlook · team inbox', ok:true},
+  {ch:'linkedin', label:'LinkedIn · Dennis', ok:true},
+  {ch:'whatsapp', label:'WhatsApp Business', ok:false, note:'Reconnect required. Session expired Oct 14'}
+];
+const chanOk = ch => ACCOUNTS.some(a => a.ch === ch && a.ok);
+const DEFAULT_THREADS = [
+  {id:'T1',who:'S1',ch:'email',acct:'Gmail',proj:'BC-101',subject:'Re: Lonsdale Quay lender shortlist',unread:true,msgs:[
+    {me:true,at:'2026-10-14T16:40',text:'Hi R., attached is the shortlist of three lenders for the construction facility. The Schedule I bank is furthest along and takes it to credit committee tomorrow.'},
+    {me:false,at:'2026-10-15T09:12',text:'Thanks Dennis. Does credit committee need the updated cost-to-complete from our QS, or is the August version enough?'}]},
+  {id:'T2',who:'S3',ch:'whatsapp',proj:'BC-102',unread:true,msgs:[
+    {me:false,at:'2026-10-15T08:05',text:'Term sheet came in last night. Two conditions I’m not sure about: the presale threshold and the interest reserve. Call at 2?'}]},
+  {id:'T3',who:null,from:'Coastal Build Group',addr:'info@coastalbuild.example',ch:'email',acct:'Gmail',proj:null,subject:'Land loan in Kelowna?',unread:true,inquiry:'2026-10-15',msgs:[
+    {me:false,at:'2026-10-15T07:30',text:'Saw your note on construction lending in the Okanagan. We’re assembling two lots in Kelowna and need a land loan of around $6M. Is that something you arrange?'}]},
+  {id:'T4',who:'S5',ch:'email',acct:'Outlook',proj:'BC-107',subject:'Pandosy cost-to-complete + pro forma',unread:true,msgs:[
+    {me:true,at:'2026-10-07T11:20',text:'Could you send the current cost-to-complete and pro forma? The credit union needs both before it will review the file.'},
+    {me:false,at:'2026-10-14T17:55',text:'Both attached: Pandosy_CTC_Oct.xlsx and Pandosy_ProForma_v3.pdf. Hard costs are up about 4% since spring.'}]},
+  {id:'T5',who:'S2',ch:'linkedin',proj:'BC-104',unread:false,msgs:[
+    {me:true,at:'2026-10-10T10:02',text:'Hi M., I arrange rezoning bridge and land financing in Metro Vancouver. Happy to share what lenders are quoting for sites like Kingsway.'},
+    {me:false,at:'2026-10-13T15:47',text:'Open to a call next week. What timelines are lenders seeing from rezoning to first construction draw?'}]},
+  {id:'T6',who:'S6',ch:'email',acct:'Outlook',proj:'BC-108',subject:'MLI Select appraisal quote',unread:false,msgs:[
+    {me:false,at:'2026-10-13T13:10',text:'Two appraisal quotes attached. The lower one can start next week.'},
+    {me:true,at:'2026-10-13T14:02',text:'Thanks A. Let’s go with the lower quote. I’ll confirm the appraiser is on the lender’s approved list.'}]},
+  {id:'T7',who:'S7',ch:'linkedin',proj:'BC-104',unread:false,msgs:[
+    {me:false,at:'2026-10-09T09:30',text:'Thanks for connecting. We’re the architects on Kingsway and two other rezonings in Richmond.'}]}
+];
+
+/* ---------- State + persistence ---------- */
+const clone = o => JSON.parse(JSON.stringify(o));
+function loadState(){
+  try{ const raw = localStorage.getItem(STORE_KEY); if(raw){ const s = JSON.parse(raw); if(s.deals && s.outreach && s.threads) return s; } }
+  catch(e){ console.debug('[kcos] storage unavailable', e); }
+  return {deals:clone(DEFAULT_DEALS), outreach:clone(DEFAULT_OUTREACH), threads:clone(DEFAULT_THREADS)};
+}
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify({deals:state.deals, outreach:state.outreach, threads:state.threads})); }
+  catch(e){ console.debug('[kcos] could not persist', e); }
+}
+const state = Object.assign(loadState(), {
+  view:'overview', f:{q:'',muni:'',stage:'',min:0}, metric:'value', muni:null, chan:'all', thread:null
+});
+const unreadCount = () => state.threads.filter(t => t.unread).length;
+
+/* ---------- Helpers ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD',notation:'compact',maximumFractionDigits:1}).format(n);
+const fdate = s => new Date(s+'T12:00:00').toLocaleDateString('en-CA',{month:'short',day:'numeric'});
+const daysFrom = s => Math.round((new Date(s+'T12:00:00') - TODAY)/864e5);
+const dealFor = pid => state.deals.find(d => d.proj === pid);
+const scorePill = s => `<span class="pill score ${s>=80?'good':s>=65?'info':''}">${s}</span>`;
+const stagePill = id => `<span class="pill ${id==='funded'?'good':'info'}">${esc(stageById[id].name)}</span>`;
+const CONSENT = {
+  express:p => ['good',`Express consent · since ${fdate(p.since)}`],
+  ebr:p => [daysFrom(p.expires) < 60 ? 'warn' : 'info', `Implied · business relationship · ends ${p.expires}`],
+  pub:() => ['info','Implied · published business address'],
+  none:() => ['bad','No consent · email blocked']
+};
+const consentPill = p => { const [k,t] = CONSENT[p.consent](p); return `<span class="pill ${k}">${esc(t)}</span>`; };
+function toast(msg){
+  const t = document.getElementById('toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2600);
+}
+
+/* ---------- Navigation ---------- */
+const ICON = {
+  overview:'<path d="M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z"/>',
+  projects:'<path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/>',
+  pipeline:'<path d="M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v6h-4z"/>',
+  inbox:'<path d="M22 12h-6l-2 3h-4l-2-3H2M5.5 5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/>',
+  map:'<path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3zM9 3v15M15 6v15"/>',
+  people:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>'
+};
+const VIEWS = [
+  {id:'overview',label:'Overview'},{id:'inbox',label:'Unified inbox'},{id:'projects',label:'Projects'},
+  {id:'pipeline',label:'Capital pipeline'},{id:'map',label:'BC coverage map'},{id:'people',label:'Stakeholders & outreach'}
+];
+function renderNav(){
+  const counts = {inbox:unreadCount(), projects:PROJECTS.length, pipeline:state.deals.filter(d=>d.stage!=='funded').length, people:PEOPLE.length};
+  document.getElementById('nav').innerHTML = VIEWS.map(v => `
+    <button type="button" data-view="${v.id}" ${state.view===v.id?'aria-current="page"':''}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[v.id]}</svg>
+      ${v.label}${counts[v.id]?`<span class="count">${counts[v.id]}</span>`:''}
+    </button>`).join('');
+}
+function go(view){
+  state.view = view; renderNav(); render();
+  try{ history.replaceState(null,'','#'+view); }catch(e){}
+  window.scrollTo(0,0);
+}
+const head = (eyebrow, title, sub, extra='') => `<div class="head"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p>${sub}</p></div>${extra}</div>`;
+
+/* ---------- View: Overview ---------- */
+function renderOverview(){
+  const open = state.deals.filter(d => d.stage !== 'funded');
+  const pipe = open.reduce((s,d) => s + d.amt, 0);
+  const weighted = open.reduce((s,d) => s + d.amt * stageById[d.stage].w, 0);
+  const funded = state.deals.filter(d => d.stage === 'funded').reduce((s,d) => s + d.amt, 0);
+  const fresh = PROJECTS.flatMap(p => p.signals.map(s => ({p, d:s[0], what:s[1], src:s[2]})))
+    .filter(x => daysFrom(x.d) >= -7).sort((a,b) => b.d.localeCompare(a.d));
+
+  // "Act today": deals due within 3 days + strong projects with no opportunity yet.
+  const due = open.filter(d => daysFrom(d.due) <= 3).sort((a,b) => a.due.localeCompare(b.due));
+  const untapped = PROJECTS.filter(p => p.score >= 80 && !dealFor(p.id));
+  const expiring = PEOPLE.filter(p => p.consent==='ebr' && daysFrom(p.expires) < 60);
+
+  const byStage = STAGES.map(s => ({s, amt: state.deals.filter(d => d.stage===s.id).reduce((a,d)=>a+d.amt,0), n: state.deals.filter(d=>d.stage===s.id).length}));
+  const maxStage = Math.max(...byStage.map(x => x.amt), 1);
+
+  return head('Broker console','Good afternoon, Dennis','Thursday, October 15 · Here is what moved across your BC construction book this week.') + `
+  <div class="kpis">
+    <div class="card kpi"><div class="label">Tracked BC projects</div><div class="val">${PROJECTS.length}</div><div class="note up">+${fresh.length} new signals this week</div></div>
+    <div class="card kpi"><div class="label">Open financing pipeline</div><div class="val">${money(pipe)}</div><div class="note">${open.length} active opportunities</div></div>
+    <div class="card kpi"><div class="label">Stage-weighted pipeline</div><div class="val">${money(weighted)}</div><div class="note">Planning estimate, not a forecast</div></div>
+    <div class="card kpi"><div class="label">Funded YTD</div><div class="val">${money(funded)}</div><div class="note">${state.deals.filter(d=>d.stage==='funded').length} deal(s) closed</div></div>
+  </div>
+  <div class="grid-2">
+    <section class="card"><div class="card-h"><h2>Act today</h2><span class="sub">${due.length + untapped.length + expiring.length + (unreadCount()?1:0)} items</span></div>
+      <div class="card-b list">
+        ${unreadCount() ? `<div class="li"><span class="dot"></span><div class="body"><div class="t">${unreadCount()} unread conversations</div>
+          <div class="small muted">Across email, LinkedIn and WhatsApp, including 1 new inbound inquiry</div></div>
+          <button class="btn" data-view="inbox">Open inbox</button></div>` : ''}
+        ${due.map(d => `<div class="li"><span class="dot ${daysFrom(d.due)<=0?'bad':'warn'}"></span><div class="body"><div class="t">${esc(d.next)}</div>
+          <div class="small muted">${esc(projById[d.proj].name)} · ${money(d.amt)} ${esc(d.product.toLowerCase())} · ${daysFrom(d.due)<=0?'due today':'due '+fdate(d.due)}</div></div>
+          <button class="btn" data-view="pipeline">Open</button></div>`).join('')}
+        ${untapped.map(p => `<div class="li"><span class="dot"></span><div class="body"><div class="t">High-score project with no opportunity</div>
+          <div class="small muted">${esc(p.name)} · ${esc(p.muni)} · score ${p.score}</div></div>
+          <button class="btn" data-project="${p.id}">Review</button></div>`).join('')}
+        ${expiring.map(p => `<div class="li"><span class="dot warn"></span><div class="body"><div class="t">CASL implied consent ending soon</div>
+          <div class="small muted">${esc(p.co)} · ends ${p.expires}. Ask for express consent before then.</div></div>
+          <button class="btn" data-view="people">View</button></div>`).join('')}
+      </div></section>
+    <section class="card"><div class="card-h"><h2>Pipeline by stage</h2><span class="sub">loan amount</span></div>
+      <div class="card-b bars">
+        ${byStage.map(x => `<div class="bar-row"><span>${x.s.name} <span class="muted">(${x.n})</span></span>
+          <div class="bar-track"><div class="bar-fill ${x.s.id==='funded'?'funded':''}" style="width:${(x.amt/maxStage*100).toFixed(1)}%"></div></div>
+          <span class="num" style="text-align:right">${x.amt?money(x.amt):'—'}</span></div>`).join('')}
+      </div></section>
+  </div>
+  <section class="card"><div class="card-h"><h2>New project signals</h2><span class="sub">last 7 days · source shown on every record</span></div>
+    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Project</th><th>Signal</th><th>Source</th><th class="r">Score</th></tr></thead><tbody>
+      ${fresh.map(x => `<tr class="click" data-project="${x.p.id}"><td class="mono">${fdate(x.d)}</td><td><div class="t">${esc(x.p.name)}</div><div class="s">${esc(x.p.muni)}</div></td>
+        <td>${esc(x.what)}</td><td class="s">${esc(x.src)}</td><td class="r">${scorePill(x.p.score)}</td></tr>`).join('')}
+    </tbody></table></div></section>`;
+}
+
+/* ---------- View: Projects ---------- */
+function filteredProjects(){
+  const {q,muni,stage,min} = state.f;
+  return PROJECTS.filter(p =>
+    (!q || (p.name+' '+p.muni+' '+p.type+' '+p.id).toLowerCase().includes(q.toLowerCase())) &&
+    (!muni || p.muni===muni) && (!stage || p.stage===stage) && p.score >= min
+  ).sort((a,b) => b.score - a.score);
+}
+function projectRows(list){
+  return list.map(p => { const d = dealFor(p.id); return `<tr class="click" data-project="${p.id}">
+    <td><div class="t">${esc(p.name)}</div><div class="s">${p.id} · ${esc(p.type)}</div></td>
+    <td>${esc(p.muni)}</td><td>${esc(p.stage)}</td><td class="mono">${esc(p.size)}</td>
+    <td class="r mono">${money(p.value)}</td><td class="r">${scorePill(p.score)}</td>
+    <td>${d ? stagePill(d.stage) : '<span class="pill">No opportunity</span>'}</td></tr>`; }).join('')
+    || `<tr><td colspan="7" class="muted">No projects match these filters. Clear a filter to see more.</td></tr>`;
+}
+const PROJ_HEAD = '<thead><tr><th>Project</th><th>Municipality</th><th>Planning stage</th><th>Size</th><th class="r">Est. cost</th><th class="r">Score</th><th>Financing</th></tr></thead>';
+function renderProjects(){
+  const munis = [...new Set(PROJECTS.map(p => p.muni))].sort();
+  const stages = [...new Set(PROJECTS.map(p => p.stage))].sort();
+  const opt = (arr,sel) => arr.map(v => `<option ${v===sel?'selected':''}>${esc(v)}</option>`).join('');
+  return head('Project registry','BC construction projects','Sorted by signal score. Scores rank where to look first; they don’t predict whether a deal will fund.') + `
+  <section class="card">
+    <div class="filters">
+      <input id="f-q" type="search" placeholder="Search name, municipality, type…" value="${esc(state.f.q)}" aria-label="Search projects">
+      <select id="f-muni" aria-label="Municipality"><option value="">All municipalities</option>${opt(munis,state.f.muni)}</select>
+      <select id="f-stage" aria-label="Planning stage"><option value="">All planning stages</option>${opt(stages,state.f.stage)}</select>
+      <select id="f-min" aria-label="Minimum score">
+        ${[[0,'Any score'],[65,'Score 65+'],[80,'Score 80+']].map(([v,l]) => `<option value="${v}" ${state.f.min==v?'selected':''}>${l}</option>`).join('')}
+      </select>
+    </div>
+    <div class="table-wrap"><table>${PROJ_HEAD}<tbody id="proj-body">${projectRows(filteredProjects())}</tbody></table></div>
+  </section>`;
+}
+
+/* ---------- View: Capital pipeline (kanban) ---------- */
+function renderPipeline(){
+  const cols = STAGES.map(s => {
+    const deals = state.deals.filter(d => d.stage === s.id);
+    const total = deals.reduce((a,d) => a + d.amt, 0);
+    return `<div class="col" data-stage="${s.id}" aria-label="${s.name}">
+      <div class="col-h"><b>${s.name}</b><span>${deals.length} · ${total?money(total):'$0'}</span></div>
+      ${deals.map(d => { const p = projById[d.proj]; const dd = daysFrom(d.due); return `
+        <article class="dcard" draggable="true" data-deal="${d.id}">
+          <div class="t">${esc(p.name)}</div>
+          <div class="meta"><span>${esc(d.product)}</span><span class="amt">${money(d.amt)}</span></div>
+          <div class="meta"><span>${esc(d.lender)}</span><span class="owner" title="Owner">${d.owner}</span></div>
+          <div class="next ${dd<=1 && s.id!=='funded'?'due':''}">Next: ${esc(d.next)} · ${dd<=0?'today':fdate(d.due)}</div>
+          <select data-move="${d.id}" aria-label="Move ${esc(p.name)} to stage">
+            ${STAGES.map(x => `<option value="${x.id}" ${x.id===d.stage?'selected':''}>${x.id===d.stage?'Stage: ':'Move to '}${x.name}</option>`).join('')}
+          </select>
+        </article>`; }).join('')}
+    </div>`;
+  }).join('');
+  return head('Mortgage Mix engine','Capital pipeline','Drag a card, or use its stage menu, to move an opportunity. Changes stay in your browser only.') +
+    `<div class="board-wrap"><div class="board" id="board">${cols}</div></div>`;
+}
+function moveDeal(id, stage){
+  const d = state.deals.find(x => x.id === id);
+  if(!d || d.stage === stage) return;
+  d.stage = stage; saveState(); renderNav(); render();
+  toast(`${projById[d.proj].name} moved to ${stageById[stage].name}`);
+}
+
+/* ---------- View: BC coverage map ---------- */
+function muniStats(){
+  const m = {};
+  MUNIS.forEach(x => m[x.n] = {count:0, value:0, scoreSum:0});
+  PROJECTS.forEach(p => { const s = m[p.muni]; s.count++; s.value += p.value; s.scoreSum += p.score; });
+  Object.values(m).forEach(s => s.avg = s.count ? Math.round(s.scoreSum / s.count) : 0);
+  return m;
+}
+function renderMap(){
+  const stats = muniStats();
+  const key = state.metric;
+  const max = Math.max(...Object.values(stats).map(s => s[key]), 1);
+  const show = s => key==='value' ? money(s.value) : key==='count' ? s.count + (s.count===1?' project':' projects') : 'avg ' + s.avg;
+  const cells = [];
+  for(let r=0;r<5;r++) for(let c=0;c<7;c++){
+    const m = MUNIS.find(x => x.c===c && x.r===r);
+    if(!m){ cells.push('<div aria-hidden="true"></div>'); continue; }
+    const s = stats[m.n];
+    if(!s.count){ cells.push(`<div class="tile empty"><span class="n">${esc(m.n)}</span><span class="small">No projects yet</span></div>`); continue; }
+    const pct = Math.round(15 + 85 * s[key] / max);
+    const ink = pct > 55 ? 'var(--accent-fg)' : 'var(--fg)';
+    cells.push(`<button type="button" class="tile ${state.muni===m.n?'sel':''}" data-muni="${esc(m.n)}" style="background:color-mix(in srgb,var(--accent) ${pct}%,var(--surface));color:${ink}" aria-pressed="${state.muni===m.n}">
+      <span class="n">${esc(m.n)}</span><span class="v">${show(s)}</span></button>`);
+  }
+  const regions = [...new Set(MUNIS.map(m => m.reg))].map(reg => {
+    const ps = PROJECTS.filter(p => MUNIS.find(m => m.n===p.muni).reg === reg);
+    return {reg, n:ps.length, v:ps.reduce((a,p)=>a+p.value,0), deals:ps.filter(p=>dealFor(p.id)).length};
+  });
+  const sel = state.muni ? PROJECTS.filter(p => p.muni === state.muni).sort((a,b)=>b.score-a.score) : null;
+  const metricBtns = [['value','Est. cost'],['count','Projects'],['avg','Avg score']]
+    .map(([k,l]) => `<button type="button" data-metric="${k}" aria-pressed="${state.metric===k}">${l}</button>`).join('');
+  return head('Coverage','BC opportunity heatmap','Municipalities shaded by tracked activity. Select a tile to list its projects.', `<div class="seg" role="group" aria-label="Shade by">${metricBtns}</div>`) + `
+  <div class="grid-2">
+    <section class="card"><div class="card-h"><h2>Schematic tile map</h2><span class="sub">roughly geographic · not to scale</span></div>
+      <div class="card-b" style="display:grid;gap:12px">
+        <div class="map-wrap"><div class="tiles">${cells.join('')}</div></div>
+        <div class="legend"><span>Less</span><span class="ramp"></span><span>More</span><span>· dashed = in coverage, no projects tracked</span></div>
+      </div></section>
+    <section class="card"><div class="card-h"><h2>${sel ? esc(state.muni) : 'By region'}</h2>${sel?'<button class="btn" data-muni="">Show all regions</button>':''}</div>
+      <div class="table-wrap" style="margin-top:12px">${sel
+        ? `<table><thead><tr><th>Project</th><th class="r">Est. cost</th><th class="r">Score</th></tr></thead><tbody>${sel.map(p => `<tr class="click" data-project="${p.id}"><td><div class="t">${esc(p.name)}</div><div class="s">${esc(p.stage)}</div></td><td class="r mono">${money(p.value)}</td><td class="r">${scorePill(p.score)}</td></tr>`).join('')}</tbody></table>`
+        : `<table><thead><tr><th>Region</th><th class="r">Projects</th><th class="r">Est. cost</th><th class="r">With deal</th></tr></thead><tbody>${regions.map(x => `<tr><td class="t">${esc(x.reg)}</td><td class="r mono">${x.n}</td><td class="r mono">${x.n?money(x.v):'—'}</td><td class="r mono">${x.deals}</td></tr>`).join('')}</tbody></table>`}
+      </div></section>
+  </div>`;
+}
+
+/* ---------- View: Stakeholders & outreach ---------- */
+function renderPeople(){
+  const log = [...state.outreach].sort((a,b) => b.d.localeCompare(a.d));
+  return head('Relationships','Stakeholders & outreach','Every contact shows its CASL consent basis. Email is blocked when no consent is on file. Calls and meetings stay available.') + `
+  <section class="card"><div class="card-h"><h2>Stakeholders</h2><span class="sub">${PEOPLE.length} organizations</span></div>
+    <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Organization</th><th>Role</th><th>Linked projects</th><th>Consent basis</th><th class="r">Log activity</th></tr></thead><tbody>
+    ${PEOPLE.map(p => `<tr><td><div class="t">${esc(p.co)}</div><div class="s">${esc(p.contact)}</div></td><td>${esc(p.role)}</td>
+      <td>${p.proj.map(id => `<button class="btn" style="margin:0 4px 4px 0;padding:2px 8px" data-project="${id}">${id}</button>`).join('')}</td>
+      <td>${consentPill(p)}</td>
+      <td class="r" style="white-space:nowrap"><button class="btn" data-log="${p.id}" data-ch="Email" ${p.consent==='none'?'disabled title="No CASL consent on file"':''}>Email</button>
+        <button class="btn" data-log="${p.id}" data-ch="Call">Call</button></td></tr>`).join('')}
+    </tbody></table></div></section>
+  <section class="card"><div class="card-h"><h2>Outreach log</h2><span class="sub">${log.length} touchpoints</span></div>
+    <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Date</th><th>Channel</th><th>Organization</th><th>Project</th><th>Note</th></tr></thead><tbody>
+    ${log.map(o => `<tr><td class="mono">${fdate(o.d)}</td><td><span class="pill">${esc(o.ch)}</span></td><td>${esc(personById[o.who].co)}</td>
+      <td>${esc(projById[o.proj]?.name || '—')}</td><td class="s">${esc(o.note)}</td></tr>`).join('')}
+    </tbody></table></div></section>`;
+}
+function logOutreach(pid, ch){
+  const p = personById[pid];
+  if(ch === 'Email' && p.consent === 'none'){ toast('Email blocked: no CASL consent on file for ' + p.co); return; }
+  state.outreach.push({d:'2026-10-15', who:pid, ch, proj:p.proj[0], note: ch==='Email' ? 'Email drafted (demo — not sent)' : 'Call logged'});
+  saveState(); render(); toast(`${ch} logged for ${p.co}`);
+}
+
+/* ---------- View: Unified inbox ---------- */
+const lastAt = t => t.msgs[t.msgs.length-1].at;
+const fmtAt = at => at.startsWith('2026-10-15') ? at.slice(11,16) : fdate(at.slice(0,10));
+const threadName = t => t.who ? personById[t.who].co : t.from;
+const initials = s => s.split(/\s+/).filter(w => /^[A-Za-z]/.test(w)).slice(0,2).map(w => w[0]).join('').toUpperCase();
+const addDays = (s, n) => { const d = new Date(s+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+
+// Decide whether a reply may be sent, and say why not (account health first, then CASL).
+function replyGate(t){
+  if(!chanOk(t.ch)) return {ok:false, why:`Reconnect your ${CHANNELS[t.ch]} account to reply. Messages synced before the session expired are still shown.`};
+  if(t.who && personById[t.who].consent === 'none') return {ok:false, why:'No CASL consent on file. Call or meet instead.'};
+  return {ok:true};
+}
+function threadConsent(t){
+  if(t.who) return consentPill(personById[t.who]);
+  // An inbound inquiry gives implied consent for 6 months under CASL.
+  return `<span class="pill info">Implied · inquiry ${fdate(t.inquiry)} · ends ${addDays(t.inquiry,182)}</span>`;
+}
+function renderInbox(){
+  const list = state.threads.filter(t => state.chan==='all' || t.ch===state.chan).sort((a,b) => lastAt(b).localeCompare(lastAt(a)));
+  const cur = state.threads.find(t => t.id === state.thread) || list[0];
+  const n = ch => state.threads.filter(t => (ch==='all' || t.ch===ch) && t.unread).length;
+  const chans = [['all','All'], ...Object.entries(CHANNELS)].map(([k,l]) =>
+    `<button type="button" class="chan" data-chan="${k}" aria-pressed="${state.chan===k}">${l}<span>${n(k)||''}</span></button>`).join('');
+  const accts = ACCOUNTS.map(a => `<div class="acct"><span class="dot ${a.ok?'good':'bad'}"></span><div>${esc(a.label)}${a.ok?'':`<div class="small" style="color:var(--danger)">${esc(a.note)}</div>`}</div></div>`).join('');
+  const rows = list.map(t => { const last = t.msgs[t.msgs.length-1]; return `
+    <button type="button" class="th ${t.unread?'unread':''}" data-thread="${t.id}" aria-current="${cur && cur.id===t.id}">
+      <span class="av">${initials(threadName(t))}</span>
+      <span style="min-width:0">
+        <span class="row"><span class="who">${esc(threadName(t))}</span><time>${fmtAt(last.at)}</time></span>
+        ${t.subject ? `<span class="snip" style="display:block;color:var(--fg)">${esc(t.subject)}</span>` : ''}
+        <span class="snip" style="display:block">${last.me?'You: ':''}${esc(last.text)}</span>
+        <span class="tags"><span class="pill">${CHANNELS[t.ch]}</span>${t.proj?`<span class="pill info">${t.proj}</span>`:'<span class="pill warn">Unmatched sender</span>'}</span>
+      </span></button>`; }).join('') || '<p class="muted" style="padding:14px">No conversations on this channel.</p>';
+  return head('Unified inbox','Conversations','Email, LinkedIn and WhatsApp in one place, each thread matched to its stakeholder, project and deal.') + `
+  <section class="card inbox ${state.thread?'open':''}">
+    <div class="ib-side">
+      <div><h3>Channels</h3><div class="chans">${chans}</div></div>
+      <div><h3>Connected accounts</h3><div class="accts">${accts}</div></div>
+    </div>
+    <div class="ib-list" aria-label="Conversations">${rows}</div>
+    <div class="ib-thread">${cur ? renderThread(cur) : '<p class="muted" style="padding:18px">Select a conversation.</p>'}</div>
+  </section>
+  <p class="small muted" style="margin:0">Planned sync: Unipile connects each user’s accounts and pushes new messages by webhook. In this demo, nothing is sent and replies are saved in your browser only.</p>`;
+}
+function renderThread(t){
+  const p = t.who ? personById[t.who] : null;
+  const d = t.proj ? dealFor(t.proj) : null;
+  const gate = replyGate(t);
+  return `
+    <div class="thr-h">
+      <button type="button" class="btn back" data-back>‹ All conversations</button>
+      <div><h2>${esc(threadName(t))}</h2><div class="small muted">${p ? esc(p.contact) + ' · ' + esc(p.role) : esc(t.addr) + ' · not yet a stakeholder'}</div></div>
+      <div class="ctx">
+        <span class="pill">${CHANNELS[t.ch]}${t.acct?' · '+esc(t.acct):''}</span>
+        ${threadConsent(t)}
+        ${t.proj ? `<button class="btn" style="padding:2px 9px" data-project="${t.proj}">${esc(projById[t.proj].name)}</button>` : ''}
+        ${d ? `${stagePill(d.stage)} <span class="mono">${money(d.amt)}</span> <span class="muted">· Next: ${esc(d.next)}</span>` : ''}
+        ${!t.who ? (t.linked ? '<span class="pill good">Stakeholder created</span>' : `<button class="btn primary" style="padding:3px 10px" data-link="${t.id}">Create stakeholder</button>`) : ''}
+      </div>
+      ${t.subject ? `<div class="small"><b>${esc(t.subject)}</b></div>` : ''}
+    </div>
+    <div class="msgs">${t.msgs.map(m => `<div class="msg ${m.me?'me':''}">${esc(m.text)}<time>${m.me?'You':esc(threadName(t))} · ${fmtAt(m.at)}${m.demo?' · demo, not sent':''}</time></div>`).join('')}</div>
+    <form class="composer" data-reply="${t.id}">
+      <label for="reply" class="small muted">Reply via ${CHANNELS[t.ch]}${t.acct?' ('+esc(t.acct)+')':''}</label>
+      <textarea id="reply" ${gate.ok?'':'disabled'} placeholder="${gate.ok?'Write a reply…':''}"></textarea>
+      <div class="row"><span class="small ${gate.ok?'muted':''}" style="${gate.ok?'':'color:var(--danger)'}">${gate.ok ? 'Replies are logged to the outreach history automatically.' : esc(gate.why)}</span>
+        <button class="btn primary" type="submit" ${gate.ok?'':'disabled'}>Send reply</button></div>
+    </form>`;
+}
+function openThread(id){
+  const t = state.threads.find(x => x.id === id); if(!t) return;
+  state.thread = id; t.unread = false; saveState(); renderNav(); render();
+}
+function sendReply(id, text){
+  const t = state.threads.find(x => x.id === id);
+  if(!t || !text.trim() || !replyGate(t).ok) return;
+  const now = new Date();
+  t.msgs.push({me:true, at:'2026-10-15T'+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'), text:text.trim(), demo:true});
+  if(t.who) state.outreach.push({d:'2026-10-15', who:t.who, ch:CHANNELS[t.ch], proj:t.proj, note:'Reply: '+text.trim().slice(0,60)});
+  saveState(); render(); toast('Reply saved to the thread. Demo only, nothing was sent.');
+}
+
+/* ---------- Project briefing drawer ---------- */
+function openProject(id){
+  const p = projById[id]; if(!p) return;
+  const d = dealFor(id);
+  const people = PEOPLE.filter(x => x.proj.includes(id));
+  const loLow = p.value * .60, loMid = p.value * .65, loHigh = p.value * .75;
+  const recent = p.signals.filter(s => daysFrom(s[0]) >= -30).length;
+  document.getElementById('layer').innerHTML = `
+    <div class="scrim" data-close></div>
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title">
+      <button class="close" data-close>Close ✕</button>
+      <div><div class="eyebrow">${p.id} · ${esc(p.type)}</div><h2 id="dr-title" style="margin-top:4px">${esc(p.name)}</h2>
+        <div class="muted">${esc(p.muni)}, BC · ${esc(p.stage)}</div></div>
+      <div class="facts">
+        <div class="fact"><span>Est. construction cost</span><b>${money(p.value)}</b></div>
+        <div class="fact"><span>Signal score</span><b>${p.score}/100</b></div>
+        <div class="fact"><span>Size</span><b>${esc(p.size)}</b></div>
+        <div class="fact"><span>Financing</span><b style="font-family:var(--font);font-size:13px">${d ? esc(stageById[d.stage].name) + ' · ' + money(d.amt) : 'No opportunity yet'}</b></div>
+      </div>
+      <div><h3>Why this score</h3><ul>
+        <li>Planning stage: ${esc(p.stage)}</li>
+        <li>${recent} public signal${recent===1?'':'s'} in the last 30 days</li>
+        <li>${p.dev ? 'Decision-maker identified: ' + esc(personById[p.dev].co) : 'No developer or owner identified yet'}</li>
+        <li>Est. cost ${p.value >= 15e6 && p.value <= 150e6 ? 'inside' : 'outside'} your $15M–$150M target range</li></ul></div>
+      <div><h3>Financing hypothesis</h3>
+        <p style="margin:0 0 8px">Indicative construction loan around <b class="mono">${money(loMid)}</b> at 65% loan-to-cost (range ${money(loLow)}–${money(loHigh)} at 60–75%).</p>
+        <p class="hint">Hypothesis for prioritizing only. Confirm with lender term sheets and the borrower's verified cost budget.</p></div>
+      <div><h3>Public signals</h3><div class="list">${p.signals.map(s => `<div class="li"><span class="dot"></span><div class="body"><div class="t">${esc(s[1])}</div><div class="small muted">${fdate(s[0])} · ${esc(s[2])} (illustrative)</div></div></div>`).join('')}</div></div>
+      <div><h3>Stakeholders</h3>${people.length ? `<div class="list">${people.map(x => `<div class="li"><div class="body"><div class="t">${esc(x.co)}</div><div class="small muted">${esc(x.role)} · ${esc(x.contact)}</div><div style="margin-top:4px">${consentPill(x)}</div></div></div>`).join('')}</div>` : '<p class="muted" style="margin:0">None linked yet.</p>'}</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${d ? `<button class="btn primary" data-view="pipeline">View in pipeline</button>` : `<button class="btn primary" data-create="${p.id}">Create opportunity</button>`}
+        <button class="btn" data-close>Close</button>
+      </div>
+    </aside>`;
+  document.querySelector('.drawer .close').focus();
+}
+function closeDrawer(){ document.getElementById('layer').innerHTML = ''; }
+function createDeal(pid){
+  const p = projById[pid];
+  const n = Math.max(...state.deals.map(d => +d.id.slice(1)), 0) + 1;
+  state.deals.push({id:'D'+n, proj:pid, product:'Construction loan', amt:Math.round(p.value*.65/1e5)*1e5, lender:'—', stage:'identified', next:'Qualify borrower & scope', due:'2026-10-22', owner:'DE'});
+  saveState(); closeDrawer(); go('pipeline'); toast(`Opportunity created for ${p.name}`);
+}
+
+/* ---------- Render + events ---------- */
+const RENDER = {overview:renderOverview, inbox:renderInbox, projects:renderProjects, pipeline:renderPipeline, map:renderMap, people:renderPeople};
+function render(){ document.getElementById('view').innerHTML = RENDER[state.view](); }
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-view],[data-project],[data-close],[data-create],[data-metric],[data-muni],[data-log],[data-action],[data-thread],[data-chan],[data-back],[data-link]');
+  if(!t) return;
+  if(t.dataset.thread){ openThread(t.dataset.thread); return; }
+  if(t.dataset.chan){ state.chan = t.dataset.chan; state.thread = null; render(); return; }
+  if(t.dataset.back !== undefined){ state.thread = null; render(); return; }
+  if(t.dataset.link){
+    const th = state.threads.find(x => x.id === t.dataset.link); th.linked = true; saveState(); render();
+    toast(`${th.from} added as a stakeholder (demo)`); return;
+  }
+  if(t.dataset.close !== undefined){ closeDrawer(); return; }
+  if(t.dataset.create){ createDeal(t.dataset.create); return; }
+  if(t.dataset.view){ closeDrawer(); go(t.dataset.view); return; }
+  if(t.dataset.project){ openProject(t.dataset.project); return; }
+  if(t.dataset.metric){ state.metric = t.dataset.metric; render(); return; }
+  if(t.dataset.muni !== undefined){ state.muni = t.dataset.muni && state.muni !== t.dataset.muni ? t.dataset.muni : null; render(); return; }
+  if(t.dataset.log){ logOutreach(t.dataset.log, t.dataset.ch); return; }
+  if(t.dataset.action === 'reset'){
+    state.deals = clone(DEFAULT_DEALS); state.outreach = clone(DEFAULT_OUTREACH); state.threads = clone(DEFAULT_THREADS); state.thread = null;
+    try{ localStorage.removeItem(STORE_KEY); }catch(err){}
+    renderNav(); render(); toast('Demo data reset');
+  }
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') closeDrawer();
+  const row = e.target.closest && e.target.closest('tr.click');
+  if(row && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openProject(row.dataset.project); }
+});
+// Filters update only the table body so the search box keeps focus while typing.
+document.addEventListener('input', e => {
+  const id = e.target.id;
+  if(!id || !id.startsWith('f-')) return;
+  const key = id.slice(2);
+  state.f[key] = key === 'min' ? +e.target.value : e.target.value;
+  const body = document.getElementById('proj-body');
+  if(body) body.innerHTML = projectRows(filteredProjects());
+});
+document.addEventListener('submit', e => {
+  const f = e.target.closest('[data-reply]'); if(!f) return;
+  e.preventDefault(); sendReply(f.dataset.reply, f.querySelector('textarea').value);
+});
+document.addEventListener('change', e => { if(e.target.dataset.move) moveDeal(e.target.dataset.move, e.target.value); });
+
+// Kanban drag-and-drop (desktop); the per-card stage menu covers touch and keyboard.
+document.addEventListener('dragstart', e => { const c = e.target.closest?.('.dcard'); if(!c) return; c.classList.add('dragging'); e.dataTransfer.setData('text/plain', c.dataset.deal); });
+document.addEventListener('dragend', e => { e.target.closest?.('.dcard')?.classList.remove('dragging'); document.querySelectorAll('.col.over').forEach(c => c.classList.remove('over')); });
+document.addEventListener('dragover', e => { const col = e.target.closest?.('.col'); if(!col) return; e.preventDefault(); col.classList.add('over'); });
+document.addEventListener('dragleave', e => { const col = e.target.closest?.('.col'); if(col && !col.contains(e.relatedTarget)) col.classList.remove('over'); });
+document.addEventListener('drop', e => { const col = e.target.closest?.('.col'); if(!col) return; e.preventDefault(); col.classList.remove('over'); moveDeal(e.dataTransfer.getData('text/plain'), col.dataset.stage); });
+
+// Make project rows keyboard-reachable after every render.
+new MutationObserver(() => document.querySelectorAll('tr.click:not([tabindex])').forEach(r => r.tabIndex = 0))
+  .observe(document.getElementById('view'), {childList:true, subtree:true});
+
+const start = (location.hash || '').slice(1);
+state.view = RENDER[start] ? start : 'overview';
+renderNav(); render();
+</script>
+
+</body>
+</html>
