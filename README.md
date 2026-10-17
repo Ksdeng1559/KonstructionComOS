@@ -64,3 +64,14 @@ See `docs/PRD.md` and `docs/ARCHITECTURE.md`. This is an MVP scaffold, **not** a
 6. Validate organization isolation, Clerk/Supabase integration, demo vs verified data boundaries, lawful contact handling, analytics and cross-domain navigation before marking integrated.
 
 **Implementation reference:** [docs/FRONTEND_INTEGRATION.md](docs/FRONTEND_INTEGRATION.md). Coding agents should read it alongside [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md).
+
+## GTM outreach system — dry-run foundation
+
+The [outreach system contract](docs/gtm/OUTREACH_SYSTEM.md) extends discovery and enrichment into reviewed outreach, qualification, follow-up and outcomes. It separates platform sales to brokerages, broker-to-sponsor origination, and future contractor job/appointment workflows. See the [Claude Code implementation handoff](docs/gtm/CLAUDE_IMPLEMENTATION.md).
+
+**Implemented:** a pure TypeScript planning gate in `src/lib/gtm/outreach.ts`, stable action-identity keys, and `npm run test:gtm` (Node 22.18+ or 24; no credentials). It checks workspace consistency, evidence freshness/conflicts, fit, source-use restrictions, contact-basis review, suppression, replies, existing meetings, ownership conflicts and version-bound approvals. Every result keeps delivery disabled.
+
+**Not implemented:** Outreach UI, persistence, authenticated endpoints, durable outbox, live provider adapters, campaign sending or appointment booking. The planner is not authentication, a legal eligibility determination or durable duplicate prevention. LeadSniperAI, DataForSEO, Exa and Harvey are proposed adapter roles only. No messages are sent by this feature.
+
+This addition does not replace the CAP-01/02/03 strategy/review-queue scope, merge GTM PR #2, modify the live shared database, combine the separate Atomic CRM repository or change the public Lovable frontend.
+

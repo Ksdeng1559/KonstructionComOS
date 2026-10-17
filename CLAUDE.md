@@ -32,3 +32,8 @@ Implement **Clerk Organizations + verified server-side org mapping + complete Su
 - Run typecheck/lint/build/tests where available. Do not claim unexecuted checks pass.
 - Never log or commit secrets/PII. CASL/PIPEDA and lending/security obligations require explicit review.
 - End each task with changes, test evidence, limitations and exact next step.
+
+## GTM outreach continuation
+
+Read [docs/gtm/OUTREACH_SYSTEM.md](docs/gtm/OUTREACH_SYSTEM.md) and [docs/gtm/CLAUDE_IMPLEMENTATION.md](docs/gtm/CLAUDE_IMPLEMENTATION.md) before changing outreach behavior. The pure planner in `src/lib/gtm/outreach.ts` is implemented; UI, persistence, live adapters, sending and booking are not. Keep platform-sales, broker-origination and contractor-growth motions separate. Do not interpret a manual-action recommendation as authorization to send. Use `npm run test:gtm` for the planner regression suite; reconcile the separate strategy/review PR and current Mortgage Mix design before integration.
+
