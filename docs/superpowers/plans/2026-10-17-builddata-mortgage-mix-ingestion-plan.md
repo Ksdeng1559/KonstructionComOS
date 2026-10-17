@@ -1,7 +1,7 @@
 # BuildData API ingestion → Mortgage Mix (Phase 0 + Phase 1) — implementation plan
 
 Date: 2026-10-17
-Status: approved for implementation
+Status: **superseded same day — kept for history only.** Written without knowledge of 6 other open PRs on this repo, including PR #4 (`feature/builddata-integration-spec`, `docs/BUILDDATA_INTEGRATION.md`), which specifies a richer, different BuildData architecture (multi-table provenance/intelligence core vs. this doc's single `construction_projects` table) and which PR #7's own compatibility notes name as the authoritative BuildData contract to reuse. See `docs/superpowers/plans/2026-10-17-builddata-pr4-reconciled-plan.md` for the reconciled replacement. Tenancy-backfill findings below (real row counts, dead `konstruction` schema, `security definer` requirement on `current_workspace_id()`) remain valid ground truth and carry forward into the reconciled plan.
 Implements: `docs/superpowers/specs/2026-10-14-mortgage-mix-commercial-financing-design.md` (Phase 0 tenancy backfill + FK cleanup, Phase 1 `construction_projects`)
 Supersedes planning assumptions in that spec where live-system verification (below) found them wrong.
 
