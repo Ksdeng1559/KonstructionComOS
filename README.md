@@ -66,3 +66,7 @@ See `docs/PRD.md` and `docs/ARCHITECTURE.md`. This is an MVP scaffold, **not** a
 6. Validate organization isolation, Clerk/Supabase integration, demo vs verified data boundaries, lawful contact handling, analytics and cross-domain navigation before marking integrated.
 
 **Implementation reference:** [docs/FRONTEND_INTEGRATION.md](docs/FRONTEND_INTEGRATION.md). Coding agents should read it alongside [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md).
+
+## Harvey autonomous outreach worker (feature branch)
+
+Harvey is pinned as a separate Python Git submodule at `services/harvey` (fork: [Ksdeng1559/harvey](https://github.com/Ksdeng1559/harvey)). Clone with `git clone --recurse-submodules` or run `git submodule update --init --recursive`. Harvey's existing DataForSEO discovery, signal cohorts, Writer, Handler and approval outbox are intended to support evidence-based outreach, integrated with LeadSniperAI and this app via future authenticated worker APIs. **The submodule is source inclusion only; no live prospect sync or sending is enabled.** See [Harvey outreach architecture](docs/HARVEY_OUTREACH.md) and [Claude Code task list](docs/HARVEY_OUTREACH_TASKS.md).

@@ -32,3 +32,6 @@ Implement **Clerk Organizations + verified server-side org mapping + complete Su
 - Run typecheck/lint/build/tests where available. Do not claim unexecuted checks pass.
 - Never log or commit secrets/PII. CASL/PIPEDA and lending/security obligations require explicit review.
 - End each task with changes, test evidence, limitations and exact next step.
+
+## Harvey outreach integration (feature branch)
+Harvey lives at `services/harvey` as a pinned Git submodule. Read `docs/HARVEY_OUTREACH.md` and `docs/HARVEY_OUTREACH_TASKS.md` before implementing outreach. Preserve Harvey's existing DataForSEO discovery, signal cohorts and human-reviewed outbox. Do not imply a submodule provides an operational integration. Do not enable autonomous prospect sending or expose a public worker endpoint; first implement verified tenancy, evidence, consent/suppression checks, approval logs, and seed-only tests.
