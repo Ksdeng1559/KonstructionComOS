@@ -2,7 +2,11 @@
 
 **Construction Intelligence & Capital Origination OS** — a multi-tenant B2B SaaS for discovering early construction opportunities, identifying project stakeholders, and managing financing outreach.
 
-## MVP: British Columbia
+## Current status
+
+This branch contains the application scaffold and a consolidated Claude Code implementation handoff. Client brains, live enrichment, GTM automation and success scorecards are proposed work unless verified in the actual code. The current documentation changes are tracked in [PR #2](https://github.com/Ksdeng1559/KonstructionComOS/pull/2).
+
+## Planned MVP: British Columbia
 - Project intelligence registry with construction stage, estimated budget, source provenance, and confidence
 - Pipeline for commercial mortgage/financing opportunities
 - Stakeholder and company directory (developers, contractors, architects, property owners)
@@ -64,3 +68,98 @@ See `docs/PRD.md` and `docs/ARCHITECTURE.md`. This is an MVP scaffold, **not** a
 6. Validate organization isolation, Clerk/Supabase integration, demo vs verified data boundaries, lawful contact handling, analytics and cross-domain navigation before marking integrated.
 
 **Implementation reference:** [docs/FRONTEND_INTEGRATION.md](docs/FRONTEND_INTEGRATION.md). Coding agents should read it alongside [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md).
+
+## Client intelligence and GTM workflow
+
+The proposed workflow connects client understanding to evidence-backed business development:
+
+1. **Understand the client:** goals, strengths, weaknesses, capabilities, capacity and preferred opportunities.
+2. **Define the offer:** a service the client can deliver, supporting proof, qualification questions and next-step CTA.
+3. **Discover project signals:** permitted construction records with source identity, event dates and coverage limits.
+4. **Resolve and enrich:** verify projects, companies and stakeholder roles; add authorized relationship context and preserve unknowns/conflicts.
+5. **Decide the pursuit:** recommend pursue, partner, nurture or pass, with Needs research when evidence is insufficient.
+6. **Assign action:** identify account/pursuit owners and create verification, introduction or follow-up tasks.
+7. **Qualify and progress:** record stakeholder-confirmed needs and move through guarded workflow stages.
+8. **Measure and learn:** capture meetings, mandates and supported financial outcomes; propose reviewed improvements to the client brain and offers.
+
+These are implementation requirements. The documentation and wireframes do not establish that the corresponding screens, integrations or live workflows exist.
+
+### Implementation guide
+
+| Document | What Claude Code should use it for |
+| --- | --- |
+| [AGENTS.md](AGENTS.md) | Shared engineering, security and completion rules |
+| [CLAUDE.md](CLAUDE.md) | Coding-agent entry point and workstream boundaries |
+| [PRD](docs/PRD.md) | Product scope and MVP acceptance |
+| [Architecture](docs/ARCHITECTURE.md) | Architecture baseline; reconcile tenancy with the approved Mortgage Mix design |
+| [Mortgage Mix design](docs/superpowers/specs/2026-10-14-mortgage-mix-commercial-financing-design.md) | Current approved commercial-financing direction and workspace mapping |
+| [client.brain.md](client.brain.md) | Client-profile template: goals, evidenced strengths, weaknesses, interests, exclusions and capacity |
+| [GTM lead-source playbook](docs/GTM_LEAD_SOURCE_PLAYBOOK.md) | Segment strategies, evidence gates, qualification, promotion and attribution |
+| [Enrichment process](docs/GTM_ENRICHMENT.md) | Identity resolution, company/stakeholder/relationship research, field evidence and reviewed results |
+| [GTM wireframe](docs/GTM_WIREFRAME.md) | Queue, expandable briefing, verification forms, Kanban, responsive behavior and UI states |
+| [Execution and learning loop](docs/GTM_EXECUTION_LOOP.md) | Offers, pursuit decisions, relationship ownership, Today tasks and outcome feedback |
+| [Goals and success metrics](docs/GTM_GOALS_SUCCESS.md) | Goal ownership, baselines/targets, outcome definitions and scorecard requirements |
+| [Frontend integration](docs/FRONTEND_INTEGRATION.md) | Public Lovable frontend, design alignment and migration boundaries |
+
+Read the current checkout and package scripts before implementing. Older generic schema notes and plans are not evidence of completed functionality. In the approved Mortgage Mix design, `workspaces` is the tenant boundary and `organizations` represents business entities. Do not substitute the separate Atomic CRM `tenant_id`/Supabase Auth design.
+
+### Client brain
+
+The repository's `client.brain.md` is an **unpopulated reusable template**. Each actual client needs a private, versioned profile under verified workspace access, including:
+
+- Identity, goals and success measures.
+- Strengths with proof and business weaknesses/capability gaps.
+- Ranked opportunity interests, territory, size and timing preferences.
+- Exclusions, capacity, economics and relationship context.
+- Evidence, review dates and approved learning changes.
+
+Recommendations must explain **why this fits this client** and **what may prevent success**, citing the profile version and relevant project evidence. A client preference cannot override source rights, contact suppression or authorization. Do not commit real client profiles or private relationship notes to this public repository.
+
+### Recommended user experience
+
+Default to an opportunity queue with a selected evidence-and-action panel. Expand a project to review its briefing, evidence, stakeholders, enrichment results and activity. A separate Kanban tracks qualification progress. The Today view uses existing assigned tasks; Client Profile contains goals/offers, and Goals & Success shows evidenced outcomes.
+
+Editable visual references:
+
+- [Opportunity queue and briefing](docs/wireframes/gtm-opportunity-queue.svg)
+- [Capital qualification Kanban](docs/wireframes/gtm-capital-kanban.svg)
+
+The SVG records/counts are synthetic. Preserve construction lifecycle, review eligibility, pursuit disposition and qualification stage as separate states. A card move cannot establish financing demand, a mandate, lender approval or permission to send outreach.
+
+### Success measures
+
+Start with client-approved goals and a small outcome scorecard:
+
+| Layer | Proposed measures | Interpretation |
+| --- | --- | --- |
+| Business outcomes | Qualified meetings held, signed mandates, realized fees where evidenced | The client's business results |
+| Operating drivers | Suitable pursuits, due actions completed on time, matured pursuit-to-meeting conversion | Where to improve relevance or execution |
+| Quality and economics | Reviewed evidence errors, cost per qualified meeting | Whether the workflow is accurate and sustainable |
+| Product validation | Activation, retained use, paid-pilot renewal | SaaS success, separate from the client's outcomes |
+
+Baselines and targets remain unknown until measured/confirmed. Show Not measured when source data is unavailable. Project budgets, loan principal, contact counts and enrichment volume are not realized fee revenue. Every displayed outcome should link to its authorized underlying records and metric definition.
+
+### Recommended MVP build order
+
+1. Confirm the actual data contract, then implement verified tenant mapping, restrictive RLS and cross-workspace denial tests before real data access.
+2. Build one complete **synthetic finance slice**: client brain + confirmed offer → project evidence → mocked enrichment → explainable pursuit recommendation → verification task.
+3. Add reviewed confirmation, relationship ownership, internal idempotent promotion and guarded capital Kanban.
+4. Add Today actions and one evidence-backed qualified-meeting goal with actual-count drill-through.
+5. Add outcome feedback and proposed profile/offer changes requiring review.
+6. Enable bounded real-source/enrichment pilots only after adapter fields, rights, credentials, coverage and cost limits are verified.
+
+Mock UI and pure logic can proceed while live integration gates remain unresolved. Reuse existing companies, contacts, tasks, notes and opportunities. Avoid duplicate CRM systems and keep the separately documented Atomic CRM workstream separate.
+
+### Validation and completion
+
+The current branch exposes these scripts:
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+```
+
+There is no `npm test` script in the inspected package file. Add an appropriate meaningful test harness in the implementation work rather than claiming planned tests already exist. Cover evidence gaps, entity ambiguity, duplicate/retried writes, guarded transitions, suppression, profile versions, outcome definitions and tenant isolation as relevant to the slice.
+
+For each implementation PR, report actual changes, commands/results, manual UI checks, remaining gates and the next complete slice. Documentation-only updates do not establish passing runtime checks or completed live integration.
