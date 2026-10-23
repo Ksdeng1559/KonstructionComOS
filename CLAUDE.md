@@ -8,6 +8,7 @@ You are implementing a **British Columbia-first, multi-tenant B2B construction i
 3. `docs/PRD.md` (scope, priorities and definition of done)
 4. `docs/ARCHITECTURE.md` (security, tenant isolation and ingestion pipeline)
 5. `docs/FRONTEND_INTEGRATION.md` (approved public frontend and design mapping)
+6. `docs/BUILDDATA_INTEGRATION.md` (proposed BC ingestion, enrichment and GTM scoring work packages)
 
 ## Public frontend is already chosen
 Use **https://clearconnectcom.lovable.app/** as the marketing and demo frontend. Lovable editor/source: `https://lovable.dev/projects/136ade9c-5e7f-4aea-95d7-de34af9aabc0`. Preserve its UX and navigation.
@@ -32,3 +33,6 @@ Implement **Clerk Organizations + verified server-side org mapping + complete Su
 - Run typecheck/lint/build/tests where available. Do not claim unexecuted checks pass.
 - Never log or commit secrets/PII. CASL/PIPEDA and lending/security obligations require explicit review.
 - End each task with changes, test evidence, limitations and exact next step.
+
+## BuildData task handoff (planned; not yet implemented)
+Read `docs/BUILDDATA_INTEGRATION.md` and the latest https://www.builddata.ca/openapi.json before writing adapters. Respect the existing P0 Clerk/Supabase tenant isolation dependency; use fixtures for preliminary provider development. Do not assume an API key is configured or that the provider's city/dataset coverage, permissions, pricing or schemas are uniform. Keep the key server-side; preserve provenance and vendor licensing; never conflate project evidence, inferred funding needs and confirmed client intent. Proposed per-client `client.brain.md` profiles define strengths, weaknesses, project fit and outcome targets. Implement one verified source-to-briefing slice before expanding data sources.
