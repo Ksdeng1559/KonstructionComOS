@@ -1,16 +1,41 @@
 # KommercialConnect
 
-**Commercial & Business Financing, Connected.** KommercialConnect is the proposed borrower-facing brand for a Canadian B2B platform that connects businesses and commercial property owners with finance brokers. The platform is supported by a construction intelligence and capital origination system that discovers early project opportunities, identifies stakeholders, and manages financing workflows.
+**Commercial & Business Financing, Connected.** KommercialConnect is a proposed BC-first broker origination and borrower-connection platform powered by LeadSniperAI. The primary broker workflow is to discover operating businesses and commercial property owners, verify the decision-maker, investigate evidence-backed capital events, and earn direct conversations about **multiple potential financing solutions**. Construction intelligence remains a specialist origination source rather than the exclusive product.
 
-> **Repository/product status:** The GitHub repository is still named `KonstructionComOS`. KommercialConnect is the proposed public brand; domain availability and trademark clearance are not confirmed. The application remains an MVP scaffold, and public-facing brand changes have not yet been implemented in the app.
+> **Product direction — October 21, 2026:** Discovery interviews with commercial mortgage brokers indicated that they prioritize **direct relationships with business owners** who may require business loans, commercial mortgages, refinancing, equipment financing, acquisition funding or development capital. This is qualitative customer feedback, not yet verified across a representative sample or proven willingness to pay. The previous construction-project-first PMF hypothesis is superseded for the finance-broker beachhead; contractor project-pursuit workflows remain a separate potential vertical.
+>
+> **Implementation status:** This repository is still named `KonstructionComOS`. The production app has **not** been pivoted or deployed. Multi-directory discovery adapters are scaffolded on `feature/leadsniper-multisource-discovery` and require provider credentials, permissions, tests, data security and broker workflow integration.
 
-## MVP: British Columbia
-- Project intelligence registry with construction stage, estimated budget, source provenance, and confidence
-- Pipeline for commercial mortgage/financing opportunities
-- Stakeholder and company directory (developers, contractors, architects, property owners)
-- Tenant-isolated workspace data with Clerk authentication and Supabase Postgres RLS
-- Qualified project ranking, dashboard, and CSV import/export
-- Account-based outreach workflows with compliance review (CASL/PIPEDA)
+## Revised broker MVP — BC first
+- **Two financing tracks:** business financing (working capital, equipment, ABL, acquisitions, expansion) and commercial real estate financing (owner-occupied/investment acquisitions, refinance, land, construction, bridge).
+- **Business-first discovery:** Google Places and Yelp API adapters where contractually permitted; licensed Yellow Pages only after authorization; direct company websites and approved industry/government datasets.
+- **Corporate / property research:** OrgBook BC, BC Registry, ParcelMap BC, selective LTSA title searches and licensed property datasets; model operating company, title owner, project sponsor and borrower separately.
+- **Research agents:** TinyFish for public company/decision-maker/expansion research; Scrapling for permitted first-party website extraction; Exa/Tavily/Parallel for evidence comparison. These are planned evaluation components, not an integrated production agent fleet.
+- **Broker-ready intelligence:** short source-linked Company Intelligence Card with verified leader/title, relevant business/property signals, financing hypotheses, qualification gaps and next action. Financing need remains **unknown** until confirmed by an authorized person.
+- **Simplified Chief of Staff:** daily research priorities, broker review queue, follow-ups and evidence-based action recommendations.
+- **Broker outcomes:** attributable owner-confirmed financing conversations, accepted mandates, funded outcomes, cost per qualified conversation and paid renewal.
+- **Architecture:** retain Clerk organization isolation, Supabase RLS, server-side credentials and a human-approved outreach workflow subject to CASL, privacy and source licensing.
+
+**Primary references:** [broker-feedback PMF evidence](docs/PRODUCT_MARKET_FIT_EVIDENCE.md) · [directory sourcing specification](docs/LEADSNIPERAI_DIRECTORY_SOURCING.md) · [TinyFish BC pilot](docs/LEADSNIPERAI_TINYFISH_BC_PILOT.md) · [multi-source engineering status](docs/LEADSNIPERAI_MULTISOURCE_IMPLEMENTATION.md).
+
+## Product evidence and market-sizing warning
+The prior construction/service-provider TAM and SAM describe a **different product boundary** and must not be used as the new business-owner-financing prospect TAM or broker origination SAM. New sizing must count distinct, actively originating commercial/business finance broker purchasing teams, then model addressable geographic data coverage, price, acquisition, retention and broker acceptance. Counts of BC businesses or dollar volume of commercial lending are **not** subscription-buyer counts. PMF is unproven pending measured paid-pilot results.
+
+## Broker dashboard: on-demand Search & Enrich (October 21, 2026)
+
+**Primary dashboard action:** A commercial finance broker can enter a company name or website into the prominent **Search & Enrich a Business** search bar on the executive dashboard. The form forwards the entered query to `/business-search?q=...`, where the broker confirms the intended company and chooses the research needed. The existing construction-project metrics remain visible beneath this action as a secondary workflow.
+
+**Implemented on `feature/leadsniper-multisource-discovery`:**
+- `src/app/page.tsx` — prominent dashboard search form with name/website input; linked to the business-search route.
+- `src/app/business-search/page.tsx` — responsive prototype displaying **fictional candidate businesses**, manual company selection, optional enrichment categories and an explicitly labeled intelligence-preview state.
+- Broker-selectable enrichment: **decision-makers and titles**, **expansion/growth signals**, **commercial property context**, and **potential business/commercial financing solutions**.
+- The requested dashboard query is preserved on the business-search screen. No live company lookup, TinyFish run, paid API request, financing qualification, data persistence or outreach is executed by this demo.
+
+**Next build gates:** Implement authenticated, workspace-isolated company lookup through approved licensed providers; resolve business duplicates before enrichment; provide per-run pricing/limits and human approval; orchestrate targeted TinyFish and approved website/corporate/property research; retain evidence links, dates, permissible fields and source rights; persist only authorized research in Supabase under RLS; and move owner-confirmed needs into the pipeline only after direct qualification. Add server-side rate limiting, tests, request audit logs and provider/tenant isolation before deployment.
+
+**Product rationale:** This action directly supports qualitative broker feedback: brokers frequently have a known company they want to investigate and need useful owner and financing context **on demand**, rather than browsing only pre-ranked construction opportunities. PMF and willingness to pay remain unproven.
+
+**Implementation details:** [Broker Search & Enrich MVP](docs/BROKER_SEARCH_AND_ENRICH_MVP.md). This is not deployed to production.
 
 ## Stack
 - Next.js App Router, TypeScript, Tailwind CSS
@@ -30,7 +55,9 @@
 
 The dashboard and demo dataset work without connected credentials. Production persistence requires authenticated API endpoints, JWT validation and RLS policies described in `docs/ARCHITECTURE.md`.
 
-## Current workstream
+## Historical construction-first workstream (not the new broker MVP decision)
+The following October 14–17 engineering notes are retained as historical context and must not be interpreted as the current product priority. Changes to live multi-tenant data require separate migration review.
+
 Refactoring Mortgage Mix (`mix_*` tables in the live `amgknqnhiscryvcfeoyj` Supabase project) into the commercial-financing opportunity engine, fed by BC construction-project data as a new lead source — design approved, implementation **not yet started**. See `docs/superpowers/specs/2026-10-14-mortgage-mix-commercial-financing-design.md` for the tenancy unification, FK-convention decisions, and local-test harness (Vitest against the Supabase CLI's local stack). This supersedes the earlier `2026-10-14-clerk-orgs-rls-crud-design.md` schema-isolation plan, kept for history only.
 
 **2026-10-17 planning update.** Live Supabase check confirmed zero implementation of the spec above: no `construction_projects` table, no `workspace_id` on any `mix_*` table, no `clerk_org_id` on `workspaces`, no `current_workspace_id()` helper. Two corrections to the spec's own assumptions: (1) `mix_leads` (4 rows) and `mix_opportunities` (16 rows) are **not** empty as the spec claimed — the Phase 0 backfill-to-default-workspace step needs to actually run against this real data, not treat it as a no-op; (2) a stale, abandoned `konstruction` schema (RLS enabled, zero policies, dead) remains from the superseded schema-isolation plan — flagged for cleanup, not yet dropped. Decided next concrete slice: wire the real BuildData API (`https://api.builddata.ca`, free tier, BC construction permits) into the approved `construction_projects`/`mix_opportunities` schema — chosen over building a command-center/pipeline UI first, since real data should exist before building a UI to show it. A detailed implementation plan for this slice is in progress. The broker-facing landing-page pilot-signup capture (Klick2Client/Notion spec) is confirmed explicitly gated behind internal-pilot readiness per that product doc — intentionally not being built yet.
@@ -108,3 +135,9 @@ The vendor-neutral GTM provider adapter **has been scaffolded on a separate feat
 ## Claude Code handoff — OODA Chief of Staff implementation
 
 The detailed phased engineering plan is maintained in the [feature/gtm-provider-adapter README](https://github.com/Ksdeng1559/KonstructionComOS/blob/feature/gtm-provider-adapter/README.md#claude-code-execution-plan--gtm-enrichment--ooda-chief-of-staff). **Claude Code should check out that feature branch and read its execution plan**, together with `AGENTS.md`, `CLAUDE.md`, `docs/OODA_CHIEF_OF_STAFF.md`, and the provider/OODA pipeline documents on that branch. The plan sequences tenancy and real-data gates, provider evaluation, persistent OODA decisioning, approval-controlled agent actions, dashboard work and regression testing. The branch contains **prototypes only**, not a production integration; do not merge before review and verified tests. First deliver an authorized, sourced BC prospect → Signal → Orientation → needs-review proposal → approved internal-only action → audited outcome vertical slice.
+
+## Vercel deployment status — October 21, 2026
+
+**Broker Mission Control preview is blocked by a Vercel project setting, not a confirmed source-code build error.** Its configured Root Directory `docs/mission-control/prototype` is absent from this branch; the Next.js project is at repository root (`package.json`, `src/app`). Change **Vercel → broker-mission-control → Settings → Build and Deployment → Root Directory** to the repository root (`./` / empty) before retrying a preview deployment. The current broker Search & Enrich UI remains a synthetic prototype and has not been verified live. The separate MIX Commercial Financing production project was READY at inspection and must not be confused with this deployment.
+
+See [verified Vercel failure and recovery procedure](docs/VERCEL_BROKER_MISSION_CONTROL_RECOVERY.md). Updating GitHub documentation does **not** itself change Vercel project settings or repair the live deployment.

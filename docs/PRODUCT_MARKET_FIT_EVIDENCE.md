@@ -1,5 +1,63 @@
 # Product–Market Fit Evidence Update
 
+**Updated:** October 21, 2026  
+**Geography:** British Columbia MVP; national expansion conditional  
+**Product decision:** Reposition the finance-broker beachhead around **direct business-owner access and multiple financing solutions**, with construction intelligence as an additional signal source.
+
+## Executive decision — broker-feedback-led pivot
+Recent qualitative conversations with commercial mortgage brokers, as reported by the product owner, indicate a stronger expressed preference for **speaking directly to operating business owners** and offering multiple financing options than for receiving construction project lists alone. Preserve the distinction between **voice-of-customer feedback**, **external market/problem evidence**, and **paid product-market-fit evidence**. Broker interview count, sampling, quotes, willingness to pay and actual paid use have not been documented. Treat this as a compelling hypothesis warranting a test, not verified PMF.
+
+**Core product hypothesis:** A business-first sourcing + owner-research + financing-signal workflow yields more owner-confirmed, mandate-relevant meetings per broker-hour than project-only sourcing or generic business directories.
+
+### Revised jobs to be done
+- **Commercial/business finance broker:** Find verified owners/authorized decision-makers with credible capital events; start direct conversations, qualify multiple financing products, and manage follow-up/mandates.
+- **Business/property owner:** Receive relevant financing pathways and connect with an appropriately qualified broker through permissioned intake.
+- **Commercial property-focused broker:** Identify owners, sponsors and corporate borrowers with a grounded property/transaction event, then confirm financing timing and structure.
+- **Contractor/CRE project-pursuit teams:** Retain as separate potential verticals; do not use their buyers in a broker-only market denominator.
+
+### Segments and product opportunities
+| Signal / prospect | Financing conversation to investigate | Required qualification |
+|---|---|---|
+| Operating manufacturer expands facility | Commercial mortgage, equipment loan, working capital | Owns vs leases, amount, timing, funding already secured |
+| Logistics firm relocates or grows fleet | Equipment/vehicle financing, working capital, owner-occupied purchase | Ownership, capex scope, lease, decision-maker |
+| Contractor receives major contract | Revolving line, receivables/PO financing, equipment | Contract terms, cash cycle, confirmed need |
+| Corporate owner purchases/refinances commercial property | Acquisition mortgage, bridge/refinance | Registered title, property and buyer, funding stage |
+| Developer starts rezoning/construction | Land, construction, bridge/take-out financing | Sponsor, project stage, capital structure and lender |
+| Acquisition or succession announced | Business acquisition and possible property financing | Transaction and owner-confirmed funding need |
+
+A business may have multiple related financing opportunities; do not confuse a corporate officer with a beneficial property owner, or facility occupancy with title ownership.
+
+### Data-source architecture and evidence hierarchy
+1. **Discovery (permission-dependent):** Google Places, Yelp API, licensed Yellow Pages and permitted third-party data services. Apify Actors may reduce engineering cost but do **not** override source licensing or resale restrictions.
+2. **First-party/independent research:** TinyFish, Scrapling and Exa/Tavily/Parallel on company websites, dated public announcements and official publications. Each assertion requires source URL, date, freshness and confidence.
+3. **BC corporate/property verification:** OrgBook BC, BC Registry, ParcelMap BC, targeted LTSA title retrieval and licensed BC Assessment data where needed. Record which individual/entity was verified and by which source.
+4. **Qualification:** Score research priority, not borrowing need or creditworthiness. Qualified financing opportunity requires authorized business-owner/borrower confirmation; record existing public grants/funding as possible reductions to unmet need.
+5. **Broker workflow:** Company Intelligence Card, two finance track filters, Chief of Staff briefing, human-approved outreach, broker routing, conversation, mandate and funding outcomes. Tenant isolation and CASL/privacy controls are mandatory.
+
+### Updated MVP and success metrics
+**First test cohort:** 3–5 commercial/business-finance broker teams in Metro Vancouver/Fraser Valley; focus on manufacturing, logistics and construction-related SMEs while also testing a small commercial property finance stream.
+
+**Suggested 30-day *targets, not actual results*:** discover 300 permissioned business candidates; independently research 100; verify 50 relevant decision-makers; achieve 20 owner conversations and 5 owner-confirmed financing needs, with separate counts for commercial property and business finance.
+
+**Primary PMF evidence:** number of net-new owner-confirmed finance conversations per subscribing broker team, meeting acceptance, attributable broker mandates, renewal at disclosed price, broker time saved, cost per accepted opportunity, source rights and marginal data/agent cost.
+
+**Control/benchmark:** Compare against generic directory prospecting and the previous construction-project-first approach using the same broker team and tracking method. Break down by finance product and segment; do not attribute existing broker relationships as net-new.
+
+**Decision gates:** Continue if a majority of paid pilot teams repeatedly act on verified intelligence, book attributable relevant owner conversations and renew at sustainable pricing. If not, narrow the signal set, customer segment or offer. No public claim of PMF, premium conversion uplift, exclusive leads, or guaranteed appointments without actual measurements.
+
+### Revised TAM/SAM interpretation
+Previous construction-industry TAM/SAM estimates are **historical planning scenarios only**. They counted construction and related service organizations as possible intelligence subscribers, not a verified universe of financing brokers, and are not additive to the business-owner audience. A defensible new market model needs:
+- Verified count of independent Canadian and BC *commercial/business financing broker buying teams* (not individual mortgage licensees or businesses that might borrow).
+- Relevant org/team share, unique-parent deduplication, licensed BC data coverage and price actually tested.
+- Separate borrower-opportunity inventory (companies/properties), not included in subscriber TAM.
+- Separate commission, appointment and lead revenue models and conversion validation; do not conflate these with SaaS ARR.
+- Separate national scaling assumptions rather than extrapolation from BC without evidence.
+
+**Evidence confidence:** moderate that the reported customer conversations motivate the pivot, low on preference prevalence or paid demand, and unproven on conversion, retention, incremental margin and TAM.
+
+---
+## Earlier external market/problem evidence (retained for context; construction-first positioning below is historical)
+
 **Updated:** October 19, 2026  
 **Geography:** Canada, with British Columbia as the launch market  
 **Purpose:** Add external evidence to the existing TAM/SAM and product–market-fit hypotheses. This evidence supports the relevance of selected problems; it does not demonstrate KommercialConnect adoption, retention, willingness to pay, or product–market fit.

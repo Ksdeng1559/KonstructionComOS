@@ -44,3 +44,20 @@ Three industries: manufacturing, transportation/logistics and construction trade
 
 ## Acceptance criteria
 Document source rights; activate at least one compliant directory adapter; show end-to-end dedupe, provenance, enrichment, owner verification and qualification workflow; block unknown funding need from being represented as confirmed.
+
+
+## Commercial real estate finance origination extension (2026-10-21)
+
+Expand sourcing beyond SME operating companies to commercial property owners, developers and corporate borrowers. Two separate workstreams share a company master but not a single ambiguous opportunity record:
+- **Business finance**: equipment, operating liquidity, receivables/inventory, acquisitions, working capital.
+- **Commercial property finance**: purchase, refinance, land, construction, bridge, repositioning, owner-occupied and income property.
+
+Additional approved sources: municipal zoning and development-permit portals, public land/project announcements, ParcelMap BC for parcel matching, BC Registry/OrgBook for entity matching, selective LTSA title searches for registered owner verification, and appropriately licensed BC Assessment property details. An automated feed or resale permission must be assessed source by source; a public website is not blanket permission to crawl or resell.
+
+**Required distinction:** Operating business ≠ legal corporation ≠ property owner ≠ beneficial owner ≠ developer ≠ borrower. Model links and source-backed roles, not assumed identities.
+
+**Broker discovery qualification:** asset and geographic mandate fit, identified sponsor/authorized principal, observed event and event date, project/property stage, current financing *unknown unless documented*, estimated loan amount *unknown unless supported*, follow-up and explicit borrower confirmation. Keep financing score as *research priority*, not borrowing intent or loan eligibility.
+
+**MVP UI:** two filters (“Business Financing” and “Commercial Property Financing”), one company-centric relationship view, linked property/project tabs, evidence chronology, owner/decision-maker verification, and a broker review/Chief of Staff follow-up queue. Include refinance and development opportunities without assuming maturity dates or property equity from public records.
+
+**Acceptance criteria:** at least one traceable prospect from each track; source URL/date and rights for every material assertion; no titled owner guessed from occupancy; no unconfirmed demand presented as qualified; separate outcome metrics for commercial mortgages and business loans.
